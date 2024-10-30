@@ -868,7 +868,7 @@ function App() {
       </div>
 
       <motion.div 
-        className="fixed bottom-4 right-4 flex items-center gap-2 text-sm text-muted-foreground"
+        className="fixed bottom-4 left-0 right-0 flex items-center justify-center gap-2 text-sm text-muted-foreground"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
