@@ -387,7 +387,7 @@ function App() {
     }
   }, []) // Solo al primo caricamento
 
-  // Effetto separato per le modifiche alle opzioni
+  // Modifica l'effect per le opzioni
   useEffect(() => {
     if (!isFirstLoad.current && !isManualGeneration) {
       // Disattiva l'opzione del pattern personalizzato quando si modifica la lunghezza
@@ -407,16 +407,15 @@ function App() {
         newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
       }
 
-      setPassword(newPassword)
-
       let currentIndex = 0
       const interval = setInterval(() => {
-        if (currentIndex <= length) {
+        if (currentIndex <= newPassword.length) {
           setScrambledText(generateScrambledText(newPassword, currentIndex))
           currentIndex++
         } else {
           clearInterval(interval)
           setIsGenerating(false)
+          setPassword(newPassword)
           setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
           toast.success(t.passwordGenerated)
         }
@@ -1096,7 +1095,7 @@ function App() {
                     }`}
                     {...hoverScale}
                     onClick={generatePassword}
-                    animate={isGenerating && !isInitialLoad ? { 
+                    animate={isManualGeneration && isGenerating ? {
                       opacity: 0.8,
                       scale: 0.98 
                     } : { 
@@ -1107,7 +1106,7 @@ function App() {
                     whileTap={isGenerating ? {} : hoverScale.whileTap}
                   >
                     <AnimatePresence mode="wait">
-                      {isGenerating && !isInitialLoad ? (
+                      {isGenerating ? (
                         <motion.div
                           key="generating"
                           initial={{ opacity: 0 }}
