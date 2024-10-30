@@ -573,8 +573,8 @@ function App() {
                     key={index}
                     className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors relative group cursor-default"
                   >
-                    <div className="flex-1 relative cursor-text">
-                      <span className="font-mono text-sm text-foreground truncate block">
+                    <div className="flex-1 relative">
+                      <span className="font-mono text-sm text-foreground truncate block select-none">
                         {pwd}
                       </span>
                       <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
