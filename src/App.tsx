@@ -40,7 +40,7 @@ const translations = {
     title: "Password Generator",
     generate: "Generate Password",
     length: "Length",
-    specialChars: "Special Characters",
+    specialChars: "Special characters",
     numbers: "Numbers",
     uppercase: "Uppercase",
     placeholder: "Your password will appear here",
@@ -62,12 +62,16 @@ const translations = {
     strong: "Strong",
     veryStrong: "Very Strong",
     generating: "Generating...",
+    customPattern: "Custom pattern",
+    patternHelp: "Use: a (lowercase), A (uppercase), 0 (numbers), # (special), * (any)",
+    invalidPattern: "Invalid pattern. Only use: a, A, 0, #, *",
+    patternTooShort: "Pattern must be at least 8 characters long",
   },
   it: {
     title: "Generatore di Password",
     generate: "Genera Password",
     length: "Lunghezza",
-    specialChars: "Caratteri Speciali",
+    specialChars: "Caratteri speciali",
     numbers: "Numeri",
     uppercase: "Maiuscole",
     placeholder: "La tua password apparirà qui",
@@ -89,12 +93,16 @@ const translations = {
     strong: "Forte",
     veryStrong: "Molto Forte",
     generating: "Generazione...",
+    customPattern: "Pattern personalizzato",
+    patternHelp: "Usa: a (minuscole), A (maiuscole), 0 (numeri), # (speciali), * (qualsiasi)",
+    invalidPattern: "Pattern non valido. Usa solo: a, A, 0, #, *",
+    patternTooShort: "Il pattern deve essere lungo almeno 8 caratteri",
   },
   es: {
     title: "Generador de Contraseñas",
     generate: "Generar Contraseña",
     length: "Longitud",
-    specialChars: "Caracteres Especiales",
+    specialChars: "Caracteres especiales",
     numbers: "Números",
     uppercase: "Mayúsculas",
     placeholder: "Tu contraseña aparecerá aquí",
@@ -116,6 +124,10 @@ const translations = {
     strong: "Fuerte",
     veryStrong: "Muy Fuerte",
     generating: "Generando...",
+    customPattern: "Patrón personalizado",
+    patternHelp: "Usa: a (minúsculas), A (mayúsculas), 0 (números), # (especiales), * (cualquier)",
+    invalidPattern: "Patrón no válido. Use solo: a, A, 0, #, *",
+    patternTooShort: "El patrón debe tener al menos 8 caracteres",
   },
   de: {
     title: "Passwort-Generator",
@@ -143,12 +155,16 @@ const translations = {
     strong: "Stark",
     veryStrong: "Sehr Stark",
     generating: "Generieren...",
+    customPattern: "Benutzerdefiniertes muster",
+    patternHelp: "Verwendung: a (Kleinbuchstaben), A (Großbuchstaben), 0 (Zahlen), # (Sonderzeichen), * (beliebig)",
+    invalidPattern: "Ungültiges Muster. Verwenden Sie nur: a, A, 0, #, *",
+    patternTooShort: "Das Muster muss mindestens 8 Zeichen lang sein",
   },
   fr: {
     title: "Générateur de Mot de Passe",
     generate: "Générer un Mot de Passe",
     length: "Longueur",
-    specialChars: "Caractères Spéciaux",
+    specialChars: "Caractères spéciaux",
     numbers: "Chiffres",
     uppercase: "Majuscules",
     placeholder: "Votre mot de passe apparaîtra ici",
@@ -170,6 +186,10 @@ const translations = {
     strong: "Fort",
     veryStrong: "Très Fort",
     generating: "Génération...",
+    customPattern: "Motif personnalisé",
+    patternHelp: "Utilisation: a (minuscules), A (majuscules), 0 (chiffres), # (caractères spéciaux), * (tout)",
+    invalidPattern: "Motif invalide. Utilisez uniquement : a, A, 0, #, *",
+    patternTooShort: "Le motif doit contenir au moins 8 caractères",
   }
 } as const
 
@@ -243,6 +263,29 @@ const colorizePassword = (password: string) => {
   })
 }
 
+const generateFromPattern = (pattern: string): string => {
+  const charSets = {
+    a: 'abcdefghijklmnopqrstuvwxyz',
+    A: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    '0': '0123456789',
+    '#': '!@#$%^&*()_+-=[]{}|;:,.<>?',
+    '*': 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
+  }
+
+  return pattern.split('').map(char => {
+    const charSet = charSets[char as keyof typeof charSets]
+    if (charSet) {
+      return charSet[Math.floor(Math.random() * charSet.length)]
+    }
+    return char
+  }).join('')
+}
+
+const isValidPattern = (pattern: string): boolean => {
+  const validChars = ['a', 'A', '0', '#', '*']
+  return pattern.split('').every(char => validChars.includes(char))
+}
+
 function App() {
   const [password, setPassword] = useState('')
   const [length, setLength] = useState(12)
@@ -279,6 +322,10 @@ function App() {
 
   // Aggiungi questo state per tracciare se la password è stata generata manualmente
   const [isManualGeneration, setIsManualGeneration] = useState(false)
+
+  // Aggiungi questi nuovi stati
+  const [useCustomPattern, setUseCustomPattern] = useState(false)
+  const [customPattern, setCustomPattern] = useState('aA00##**')
 
   // Aggiungi questo effect per salvare la preferenza dell'utente
   useEffect(() => {
@@ -343,6 +390,11 @@ function App() {
   // Effetto separato per le modifiche alle opzioni
   useEffect(() => {
     if (!isFirstLoad.current && !isManualGeneration) {
+      // Disattiva l'opzione del pattern personalizzato quando si modifica la lunghezza
+      if (useCustomPattern) {
+        setUseCustomPattern(false)
+      }
+      
       setIsGenerating(true)
       
       const chars = 'abcdefghijklmnopqrstuvwxyz'
@@ -375,25 +427,53 @@ function App() {
     setIsManualGeneration(false)
   }, [length, useNumbers, useSpecialChars, useUppercase])
 
+  const handlePatternChange = (value: string) => {
+    if (value === '' || isValidPattern(value)) {
+      setCustomPattern(value)
+    } else {
+      toast.error(t.invalidPattern)
+    }
+  }
+
   const generatePassword = useCallback(() => {
+    if (useCustomPattern) {
+      if (!isValidPattern(customPattern)) {
+        toast.error(t.invalidPattern)
+        return
+      }
+      if (customPattern.length < 8) {
+        toast.error(t.patternTooShort)
+        return
+      }
+      if (customPattern.length === 0) {
+        toast.error(t.invalidPattern)
+        return
+      }
+    }
+
     setIsManualGeneration(true)
     setIsGenerating(true)
     
-    const chars = 'abcdefghijklmnopqrstuvwxyz'
-      + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
-      + (useNumbers ? '0123456789' : '')
-      + (useSpecialChars ? '!@#$%^&*()_+-=[]{}|;:,.<>?' : '')
+    let newPassword: string
+    
+    if (useCustomPattern) {
+      newPassword = generateFromPattern(customPattern)
+    } else {
+      const chars = 'abcdefghijklmnopqrstuvwxyz'
+        + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
+        + (useNumbers ? '0123456789' : '')
+        + (useSpecialChars ? '!@#$%^&*()_+-=[]{}|;:,.<>?' : '')
 
-    let newPassword = ''
-    for (let i = 0; i < length; i++) {
-      newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
+      newPassword = Array(length).fill(0)
+        .map(() => chars.charAt(Math.floor(Math.random() * chars.length)))
+        .join('')
     }
 
     setPassword(newPassword)
 
     let currentIndex = 0
     const interval = setInterval(() => {
-      if (currentIndex <= length) {
+      if (currentIndex <= newPassword.length) {
         setScrambledText(generateScrambledText(newPassword, currentIndex))
         currentIndex++
       } else {
@@ -403,7 +483,7 @@ function App() {
         toast.success(t.passwordGenerated)
       }
     }, 50)
-  }, [length, useSpecialChars, useNumbers, useUppercase, t])
+  }, [length, useSpecialChars, useNumbers, useUppercase, useCustomPattern, customPattern, t])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(password)
@@ -882,7 +962,7 @@ function App() {
                           transition={textTransition}
                           className="inline-block min-w-[6rem]"
                         >
-                          {t.length}: {length}
+                          {t.length}: {useCustomPattern ? customPattern.length : length}
                         </motion.span>
                       </AnimatePresence>
                     </Label>
@@ -892,7 +972,10 @@ function App() {
                       min={8}
                       max={32}
                       step={1}
-                      className="text-foreground cursor-pointer"
+                      disabled={useCustomPattern}
+                      className={`text-foreground cursor-pointer ${
+                        useCustomPattern ? 'opacity-50' : ''
+                      }`}
                     />
                   </div>
 
@@ -955,6 +1038,55 @@ function App() {
                       className="cursor-pointer"
                     />
                   </div>
+
+                  <div className="flex items-center justify-between text-foreground">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={language + "customPattern"}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        variants={textVariants}
+                        transition={textTransition}
+                      >
+                        <Label className="cursor-pointer">{t.customPattern}</Label>
+                      </motion.div>
+                    </AnimatePresence>
+                    <Switch 
+                      checked={useCustomPattern}
+                      onCheckedChange={setUseCustomPattern}
+                      className="cursor-pointer"
+                    />
+                  </div>
+
+                  {useCustomPattern && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-2"
+                    >
+                      <input
+                        type="text"
+                        value={customPattern}
+                        onChange={(e) => handlePatternChange(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-md border bg-background text-foreground ${
+                          customPattern.length > 0 && customPattern.length < 8 ? 'border-red-500' : ''
+                        }`}
+                        placeholder="aA00##**"
+                      />
+                      <div className="text-xs space-y-1">
+                        <p className="text-muted-foreground">
+                          {t.patternHelp}
+                        </p>
+                        {customPattern.length > 0 && customPattern.length < 8 && (
+                          <p className="text-red-500">
+                            {t.patternTooShort}
+                          </p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 <motion.div className="w-full">
