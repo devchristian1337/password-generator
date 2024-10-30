@@ -453,20 +453,6 @@ function App() {
     ease: "easeInOut"
   }
 
-  // Assicuriamoci che le animazioni siano consistenti in tutta l'app
-  const buttonVariants = {
-    initial: { scale: 1 },
-    hover: { scale: 1.05 },
-    tap: { scale: 0.95 },
-    disabled: { scale: 1, opacity: 0.7 }
-  }
-
-  const buttonTransition = {
-    type: "spring",
-    stiffness: 400,
-    damping: 17
-  }
-
   return (
     <div className="min-h-screen bg-background" data-color={primaryColor}>
       <motion.div 
@@ -878,14 +864,10 @@ function App() {
                 <motion.div className="w-full">
                   <motion.button
                     className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium"
-                    initial="initial"
-                    whileHover="hover"
-                    whileTap="tap"
-                    variants={buttonVariants}
-                    transition={buttonTransition}
+                    {...hoverScale}
                     onClick={generatePassword}
                     disabled={isGenerating}
-                    animate={isGenerating && !isInitialLoad ? "disabled" : "initial"}
+                    animate={isGenerating && !isInitialLoad ? { opacity: 0.7 } : { opacity: 1 }}
                   >
                     <AnimatePresence mode="wait">
                       {isGenerating && !isInitialLoad ? (
