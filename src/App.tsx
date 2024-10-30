@@ -222,8 +222,28 @@ function App() {
   const t = translations[language]
 
   const isFirstLoad = useRef(true)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [scrambledText, setScrambledText] = useState('')
+
+  const generateScrambledText = (finalPassword: string, currentIndex: number) => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
+    let text = ''
+    
+    // Usa i caratteri della password finale fino all'indice corrente
+    for (let i = 0; i < finalPassword.length; i++) {
+      if (i < currentIndex) {
+        text += finalPassword[i]  // Caratteri già rivelati
+      } else {
+        text += chars.charAt(Math.floor(Math.random() * chars.length))  // Caratteri ancora da rivelare
+      }
+    }
+    
+    return text
+  }
 
   useEffect(() => {
+    setIsGenerating(true)
+    
     const chars = 'abcdefghijklmnopqrstuvwxyz'
       + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
       + (useNumbers ? '0123456789' : '')
@@ -233,28 +253,57 @@ function App() {
     for (let i = 0; i < length; i++) {
       newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
     }
+
+    // Impostiamo subito la password finale
     setPassword(newPassword)
-    
-    // Solo al primo caricamento, aggiungiamo la password alla cronologia
-    if (isFirstLoad.current) {
-      setPasswordHistory([newPassword])
-      isFirstLoad.current = false
-    }
+
+    let currentIndex = 0
+    const interval = setInterval(() => {
+      if (currentIndex <= length) {
+        setScrambledText(generateScrambledText(newPassword, currentIndex))
+        currentIndex++
+      } else {
+        clearInterval(interval)
+        setIsGenerating(false)
+        
+        if (isFirstLoad.current) {
+          setPasswordHistory([newPassword])
+          isFirstLoad.current = false
+        }
+      }
+    }, 50)
+
+    return () => clearInterval(interval)
   }, [length, useNumbers, useSpecialChars, useUppercase])
 
   const generatePassword = useCallback(() => {
-    let chars = 'abcdefghijklmnopqrstuvwxyz'
-    if (useUppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    if (useNumbers) chars += '0123456789'
-    if (useSpecialChars) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?'
+    setIsGenerating(true)
+    
+    const chars = 'abcdefghijklmnopqrstuvwxyz'
+      + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
+      + (useNumbers ? '0123456789' : '')
+      + (useSpecialChars ? '!@#$%^&*()_+-=[]{}|;:,.<>?' : '')
 
     let newPassword = ''
     for (let i = 0; i < length; i++) {
       newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
     }
+
+    // Impostiamo subito la password finale
     setPassword(newPassword)
-    setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
-    toast.success(t.passwordGenerated)
+
+    let currentIndex = 0
+    const interval = setInterval(() => {
+      if (currentIndex <= length) {
+        setScrambledText(generateScrambledText(newPassword, currentIndex))
+        currentIndex++
+      } else {
+        clearInterval(interval)
+        setIsGenerating(false)
+        setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
+        toast.success(t.passwordGenerated)
+      }
+    }, 50)
   }, [length, useSpecialChars, useNumbers, useUppercase, t])
 
   const copyToClipboard = () => {
@@ -630,7 +679,7 @@ function App() {
                   >
                     <div className="relative select-none">
                       <div className="whitespace-nowrap overflow-hidden text-foreground">
-                        {password || 'La tua password apparirà qui'}
+                        {isGenerating ? scrambledText : (password || t.placeholder)}
                       </div>
                       <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
                     </div>
