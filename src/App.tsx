@@ -959,11 +959,20 @@ function App() {
 
                 <motion.div className="w-full">
                   <motion.button
-                    className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium"
+                    className={`w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium ${
+                      isGenerating ? 'pointer-events-none' : ''
+                    }`}
                     {...hoverScale}
                     onClick={generatePassword}
-                    disabled={isGenerating}
-                    animate={isGenerating && !isInitialLoad ? { opacity: 0.7 } : { opacity: 1 }}
+                    animate={isGenerating && !isInitialLoad ? { 
+                      opacity: 0.8,
+                      scale: 0.98 
+                    } : { 
+                      opacity: 1,
+                      scale: 1 
+                    }}
+                    whileHover={isGenerating ? {} : hoverScale.whileHover}
+                    whileTap={isGenerating ? {} : hoverScale.whileTap}
                   >
                     <AnimatePresence mode="wait">
                       {isGenerating && !isInitialLoad ? (
