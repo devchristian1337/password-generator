@@ -233,11 +233,14 @@ function getBrowserLanguage(): 'en' | 'it' | 'es' | 'de' | 'fr' {
 
 // Aggiungi questa funzione di utilità
 const colorizePassword = (password: string) => {
-  return password.split('').map((char, index) => (
-    /[0-9]/.test(char) ? (
-      <span key={index} className="text-primary">{char}</span>
-    ) : char
-  ))
+  return password.split('').map((char, index) => {
+    if (/[0-9]/.test(char)) {
+      return <span key={index} className="text-primary">{char}</span>
+    } else if (/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(char)) {
+      return <span key={index} style={{ color: '#fc4f66' }}>{char}</span>
+    }
+    return char
+  })
 }
 
 function App() {
