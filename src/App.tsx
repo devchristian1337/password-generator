@@ -355,8 +355,6 @@ function App() {
   useEffect(() => {
     // Non generare una nuova password se stiamo solo cambiando lingua
     if (isFirstLoad.current) {
-      setIsGenerating(true)
-      
       const chars = 'abcdefghijklmnopqrstuvwxyz'
         + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
         + (useNumbers ? '0123456789' : '')
@@ -368,22 +366,9 @@ function App() {
       }
 
       setPassword(newPassword)
-
-      let currentIndex = 0
-      const interval = setInterval(() => {
-        if (currentIndex <= length) {
-          setScrambledText(generateScrambledText(newPassword, currentIndex))
-          currentIndex++
-        } else {
-          clearInterval(interval)
-          setIsGenerating(false)
-          setIsInitialLoad(false)
-          setPasswordHistory([newPassword])
-          isFirstLoad.current = false
-        }
-      }, 50)
-
-      return () => clearInterval(interval)
+      setIsInitialLoad(false)
+      setPasswordHistory([newPassword])
+      isFirstLoad.current = false
     }
   }, []) // Solo al primo caricamento
 
@@ -393,6 +378,11 @@ function App() {
       // Disattiva l'opzione del pattern personalizzato quando si modifica la lunghezza
       if (useCustomPattern) {
         setUseCustomPattern(false)
+      }
+      
+      // Aggiungi questo controllo per evitare l'animazione al primo caricamento
+      if (isInitialLoad) {
+        return;
       }
       
       setIsGenerating(true)
@@ -628,7 +618,7 @@ function App() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setLanguage('fr')} className="flex items-center gap-2 cursor-pointer">
               <FR className="w-4 h-4" />
-              Français
+              Fran��ais
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -848,22 +838,11 @@ function App() {
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <motion.div 
-                    className="flex-1 text-center p-4 bg-muted rounded-lg font-mono text-xl overflow-hidden relative"
-                    initial={{ opacity: 0.7, scale: 0.95 }}
-                    animate={{ 
-                      scale: password ? 1 : 0.95,
-                      opacity: password ? 1 : 0.7
-                    }}
-                    transition={{ 
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 20,
-                      mass: 0.8
-                    }}
+                  <div 
+                    className="flex-1 text-center p-4 bg-muted rounded-lg font-mono text-xl overflow-hidden relative h-[60px] flex items-center justify-center"
                   >
-                    <div className="relative select-none cursor-default">
-                      <div className="whitespace-nowrap overflow-hidden text-foreground">
+                    <div className="relative select-none cursor-default w-full">
+                      <div className="whitespace-nowrap overflow-hidden text-foreground min-h-[28px] flex items-center justify-center">
                         {isGenerating 
                           ? scrambledText 
                           : (password 
@@ -874,7 +853,7 @@ function App() {
                       </div>
                       <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
                     </div>
-                  </motion.div>
+                  </div>
                   <motion.div {...hoverScale}>
                     <Button 
                       variant="outline"
