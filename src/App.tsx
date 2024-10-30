@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 import { Toaster } from "sonner"
+import { Github } from "lucide-react"
 
 const translations = {
   en: {
@@ -816,6 +817,26 @@ function App() {
           </Card>
         </motion.div>
       </div>
+
+      <motion.div 
+        className="fixed bottom-4 right-4 flex items-center gap-2 text-sm text-muted-foreground"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <span>Made by devchristian1337</span>
+        <motion.a
+          href="https://github.com/devchristian1337"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-foreground hover:text-primary transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Github className="h-4 w-4" />
+        </motion.a>
+      </motion.div>
+
       <Toaster richColors position="bottom-right" />
     </div>
   )
