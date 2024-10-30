@@ -33,6 +33,7 @@ import {
 import { toast } from "sonner"
 import { Toaster } from "sonner"
 import { Github } from "lucide-react"
+import { GB, IT, ES, DE, FR } from 'country-flag-icons/react/3x2'
 
 const translations = {
   en: {
@@ -423,26 +424,31 @@ function App() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-10 w-10"
+                className="h-10 w-10 cursor-pointer"
               >
                 <Languages className="h-4 w-4" />
               </Button>
             </motion.div>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setLanguage('en')}>
+            <DropdownMenuItem onClick={() => setLanguage('en')} className="flex items-center gap-2 cursor-pointer">
+              <GB className="w-4 h-4" />
               English
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('it')}>
+            <DropdownMenuItem onClick={() => setLanguage('it')} className="flex items-center gap-2 cursor-pointer">
+              <IT className="w-4 h-4" />
               Italiano
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('es')}>
+            <DropdownMenuItem onClick={() => setLanguage('es')} className="flex items-center gap-2 cursor-pointer">
+              <ES className="w-4 h-4" />
               Español
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('de')}>
+            <DropdownMenuItem onClick={() => setLanguage('de')} className="flex items-center gap-2 cursor-pointer">
+              <DE className="w-4 h-4" />
               Deutsch
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('fr')}>
+            <DropdownMenuItem onClick={() => setLanguage('fr')} className="flex items-center gap-2 cursor-pointer">
+              <FR className="w-4 h-4" />
               Français
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -454,7 +460,7 @@ function App() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-10 w-10"
+                className="h-10 w-10 cursor-pointer"
               >
                 <Palette className="h-4 w-4" />
               </Button>
@@ -474,7 +480,7 @@ function App() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-10 w-10"
+                className="h-10 w-10 cursor-pointer"
               >
                 <History className="h-4 w-4" />
               </Button>
@@ -522,10 +528,10 @@ function App() {
                 passwordHistory.map((pwd, index) => (
                   <div 
                     key={index}
-                    className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors relative group"
+                    className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors relative group cursor-default"
                   >
-                    <div className="flex-1 relative">
-                      <span className="font-mono text-sm text-foreground truncate block select-none">
+                    <div className="flex-1 relative cursor-text">
+                      <span className="font-mono text-sm text-foreground truncate block">
                         {pwd}
                       </span>
                       <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
@@ -588,7 +594,7 @@ function App() {
             variant="outline"
             size="icon"
             onClick={toggleTheme}
-            className="h-10 w-10"
+            className="h-10 w-10 cursor-pointer"
           >
             <AnimatePresence mode="wait">
               {theme === 'light' ? (
@@ -677,7 +683,7 @@ function App() {
                       mass: 0.8
                     }}
                   >
-                    <div className="relative select-none">
+                    <div className="relative select-none cursor-default">
                       <div className="whitespace-nowrap overflow-hidden text-foreground">
                         {isGenerating ? scrambledText : (password || t.placeholder)}
                       </div>
@@ -759,7 +765,7 @@ function App() {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-foreground">
+                    <Label className="text-foreground cursor-pointer">
                       <AnimatePresence mode="wait">
                         <motion.span
                           key={language + "length"}
@@ -780,64 +786,34 @@ function App() {
                       min={8}
                       max={32}
                       step={1}
-                      className="text-foreground"
+                      className="text-foreground cursor-pointer"
                     />
                   </div>
 
                   <div className="flex items-center justify-between text-foreground">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={language + "specialChars"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                      >
-                        <Label>{t.specialChars}</Label>
-                      </motion.div>
-                    </AnimatePresence>
+                    <Label className="cursor-pointer">{t.specialChars}</Label>
                     <Switch 
                       checked={useSpecialChars}
                       onCheckedChange={setUseSpecialChars}
+                      className="cursor-pointer"
                     />
                   </div>
 
                   <div className="flex items-center justify-between text-foreground">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={language + "numbers"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                      >
-                        <Label>{t.numbers}</Label>
-                      </motion.div>
-                    </AnimatePresence>
+                    <Label className="cursor-pointer">{t.numbers}</Label>
                     <Switch 
                       checked={useNumbers}
                       onCheckedChange={setUseNumbers}
+                      className="cursor-pointer"
                     />
                   </div>
 
                   <div className="flex items-center justify-between text-foreground">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={language + "uppercase"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                      >
-                        <Label>{t.uppercase}</Label>
-                      </motion.div>
-                    </AnimatePresence>
+                    <Label className="cursor-pointer">{t.uppercase}</Label>
                     <Switch 
                       checked={useUppercase}
                       onCheckedChange={setUseUppercase}
+                      className="cursor-pointer"
                     />
                   </div>
                 </div>
