@@ -61,6 +61,7 @@ const translations = {
     moderate: "Moderate",
     strong: "Strong",
     veryStrong: "Very Strong",
+    generating: "Generating...",
   },
   it: {
     title: "Generatore di Password",
@@ -87,6 +88,7 @@ const translations = {
     moderate: "Moderata",
     strong: "Forte",
     veryStrong: "Molto Forte",
+    generating: "Generazione...",
   },
   es: {
     title: "Generador de Contraseñas",
@@ -113,6 +115,7 @@ const translations = {
     moderate: "Moderada",
     strong: "Fuerte",
     veryStrong: "Muy Fuerte",
+    generating: "Generando...",
   },
   de: {
     title: "Passwort-Generator",
@@ -139,6 +142,7 @@ const translations = {
     moderate: "Mäßig",
     strong: "Stark",
     veryStrong: "Sehr Stark",
+    generating: "Generieren...",
   },
   fr: {
     title: "Générateur de Mot de Passe",
@@ -165,6 +169,7 @@ const translations = {
     moderate: "Modéré",
     strong: "Fort",
     veryStrong: "Très Fort",
+    generating: "Génération...",
   }
 } as const
 
@@ -208,6 +213,24 @@ function getStrengthColor(strength: number) {
   return 'bg-green-500'
 }
 
+// Aggiungi questa funzione all'inizio del file, fuori dal componente
+function getBrowserLanguage(): 'en' | 'it' | 'es' | 'de' | 'fr' {
+  // Ottiene la lingua del browser
+  const browserLang = navigator.language.toLowerCase().split('-')[0]
+  
+  // Mappa delle lingue supportate
+  const supportedLanguages: Record<string, 'en' | 'it' | 'es' | 'de' | 'fr'> = {
+    en: 'en',
+    it: 'it',
+    es: 'es',
+    de: 'de',
+    fr: 'fr'
+  }
+  
+  // Restituisce la lingua supportata o 'en' come fallback
+  return supportedLanguages[browserLang] || 'en'
+}
+
 function App() {
   const [password, setPassword] = useState('')
   const [length, setLength] = useState(12)
@@ -219,12 +242,27 @@ function App() {
   const [theme, setTheme] = useState('light')
   const [passwordHistory, setPasswordHistory] = useState<string[]>([])
   const [primaryColor, setPrimaryColor] = useState("#18181b")
-  const [language, setLanguage] = useState<'en' | 'it' | 'es' | 'de' | 'fr'>('en')
+  const [language, setLanguage] = useState<'en' | 'it' | 'es' | 'de' | 'fr'>(() => {
+    // Controlla prima il localStorage per mantenere la preferenza dell'utente
+    const savedLang = localStorage.getItem('preferredLanguage') as 'en' | 'it' | 'es' | 'de' | 'fr'
+    if (savedLang) return savedLang
+    
+    // Altrimenti usa la lingua del browser
+    return getBrowserLanguage()
+  })
   const t = translations[language]
 
   const isFirstLoad = useRef(true)
   const [isGenerating, setIsGenerating] = useState(false)
   const [scrambledText, setScrambledText] = useState('')
+
+  // Aggiungi questo state per tracciare se è il primo caricamento
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  // Aggiungi questo effect per salvare la preferenza dell'utente
+  useEffect(() => {
+    localStorage.setItem('preferredLanguage', language)
+  }, [language])
 
   const generateScrambledText = (finalPassword: string, currentIndex: number) => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
@@ -266,16 +304,21 @@ function App() {
       } else {
         clearInterval(interval)
         setIsGenerating(false)
+        setIsInitialLoad(false)
         
         if (isFirstLoad.current) {
           setPasswordHistory([newPassword])
           isFirstLoad.current = false
+        } else {
+          // Aggiungi la notifica quando la password viene generata
+          setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
+          toast.success(t.passwordGenerated)
         }
       }
     }, 50)
 
     return () => clearInterval(interval)
-  }, [length, useNumbers, useSpecialChars, useUppercase])
+  }, [length, useNumbers, useSpecialChars, useUppercase, t])
 
   const generatePassword = useCallback(() => {
     setIsGenerating(true)
@@ -408,6 +451,20 @@ function App() {
   const textTransition = {
     duration: 0.3,
     ease: "easeInOut"
+  }
+
+  // Assicuriamoci che le animazioni siano consistenti in tutta l'app
+  const buttonVariants = {
+    initial: { scale: 1 },
+    hover: { scale: 1.05 },
+    tap: { scale: 0.95 },
+    disabled: { scale: 1, opacity: 0.7 }
+  }
+
+  const buttonTransition = {
+    type: "spring",
+    stiffness: 400,
+    damping: 17
   }
 
   return (
@@ -818,24 +875,54 @@ function App() {
                   </div>
                 </div>
 
-                <motion.div {...hoverScale}>
-                  <Button 
-                    className="w-full"
+                <motion.div className="w-full">
+                  <motion.button
+                    className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium"
+                    initial="initial"
+                    whileHover="hover"
+                    whileTap="tap"
+                    variants={buttonVariants}
+                    transition={buttonTransition}
                     onClick={generatePassword}
+                    disabled={isGenerating}
+                    animate={isGenerating && !isInitialLoad ? "disabled" : "initial"}
                   >
                     <AnimatePresence mode="wait">
-                      <motion.span
-                        key={language + "generate"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                      >
-                        {t.generate}
-                      </motion.span>
+                      {isGenerating && !isInitialLoad ? (
+                        <motion.div
+                          key="generating"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="flex items-center justify-center gap-2"
+                        >
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "linear"
+                            }}
+                            className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full"
+                          />
+                          <span>{t.generating}</span>
+                        </motion.div>
+                      ) : (
+                        <motion.span
+                          key="generate"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{
+                            duration: 0.2,
+                            ease: "easeOut"
+                          }}
+                        >
+                          {t.generate}
+                        </motion.span>
+                      )}
                     </AnimatePresence>
-                  </Button>
+                  </motion.button>
                 </motion.div>
               </motion.div>
             </CardContent>
