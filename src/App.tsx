@@ -231,6 +231,15 @@ function getBrowserLanguage(): 'en' | 'it' | 'es' | 'de' | 'fr' {
   return supportedLanguages[browserLang] || 'en'
 }
 
+// Aggiungi questa funzione di utilità
+const colorizePassword = (password: string) => {
+  return password.split('').map((char, index) => (
+    /[0-9]/.test(char) ? (
+      <span key={index} className="text-primary">{char}</span>
+    ) : char
+  ))
+}
+
 function App() {
   const [password, setPassword] = useState('')
   const [length, setLength] = useState(12)
@@ -239,9 +248,15 @@ function App() {
   const [useUppercase, setUseUppercase] = useState(true)
   const [isCopied, setIsCopied] = useState(false)
   const [copiedHistoryIndex, setCopiedHistoryIndex] = useState<number | null>(null)
-  const [theme, setTheme] = useState('light')
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    // Check localStorage for saved theme, default to 'light' if not found
+    return (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
+  })
   const [passwordHistory, setPasswordHistory] = useState<string[]>([])
-  const [primaryColor, setPrimaryColor] = useState("#18181b")
+  const [primaryColor, setPrimaryColor] = useState<string>(() => {
+    // Check localStorage for saved color, default to "#18181b" if not found
+    return localStorage.getItem('primaryColor') || "#18181b"
+  })
   const [language, setLanguage] = useState<'en' | 'it' | 'es' | 'de' | 'fr'>(() => {
     // Controlla prima il localStorage per mantenere la preferenza dell'utente
     const savedLang = localStorage.getItem('preferredLanguage') as 'en' | 'it' | 'es' | 'de' | 'fr'
@@ -254,73 +269,111 @@ function App() {
 
   const isFirstLoad = useRef(true)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [scrambledText, setScrambledText] = useState('')
+  const [scrambledText, setScrambledText] = useState<(string | JSX.Element)[]>([])
 
   // Aggiungi questo state per tracciare se è il primo caricamento
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  // Aggiungi questo state per tracciare se la password è stata generata manualmente
+  const [isManualGeneration, setIsManualGeneration] = useState(false)
 
   // Aggiungi questo effect per salvare la preferenza dell'utente
   useEffect(() => {
     localStorage.setItem('preferredLanguage', language)
   }, [language])
 
-  const generateScrambledText = (finalPassword: string, currentIndex: number) => {
+  // Add this effect to save the primary color
+  useEffect(() => {
+    localStorage.setItem('primaryColor', primaryColor)
+  }, [primaryColor])
+
+  const generateScrambledText = (finalPassword: string, currentIndex: number): (string | JSX.Element)[] => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
     let text = ''
     
-    // Usa i caratteri della password finale fino all'indice corrente
     for (let i = 0; i < finalPassword.length; i++) {
       if (i < currentIndex) {
-        text += finalPassword[i]  // Caratteri già rivelati
+        text += finalPassword[i]
       } else {
-        text += chars.charAt(Math.floor(Math.random() * chars.length))  // Caratteri ancora da rivelare
+        text += chars.charAt(Math.floor(Math.random() * chars.length))
       }
     }
     
-    return text
+    return colorizePassword(text)
   }
 
   useEffect(() => {
-    setIsGenerating(true)
-    
-    const chars = 'abcdefghijklmnopqrstuvwxyz'
-      + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
-      + (useNumbers ? '0123456789' : '')
-      + (useSpecialChars ? '!@#$%^&*()_+-=[]{}|;:,.<>?' : '')
+    // Non generare una nuova password se stiamo solo cambiando lingua
+    if (isFirstLoad.current) {
+      setIsGenerating(true)
+      
+      const chars = 'abcdefghijklmnopqrstuvwxyz'
+        + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
+        + (useNumbers ? '0123456789' : '')
+        + (useSpecialChars ? '!@#$%^&*()_+-=[]{}|;:,.<>?' : '')
 
-    let newPassword = ''
-    for (let i = 0; i < length; i++) {
-      newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
+      let newPassword = ''
+      for (let i = 0; i < length; i++) {
+        newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
 
-    // Impostiamo subito la password finale
-    setPassword(newPassword)
+      setPassword(newPassword)
 
-    let currentIndex = 0
-    const interval = setInterval(() => {
-      if (currentIndex <= length) {
-        setScrambledText(generateScrambledText(newPassword, currentIndex))
-        currentIndex++
-      } else {
-        clearInterval(interval)
-        setIsGenerating(false)
-        setIsInitialLoad(false)
-        
-        if (isFirstLoad.current) {
+      let currentIndex = 0
+      const interval = setInterval(() => {
+        if (currentIndex <= length) {
+          setScrambledText(generateScrambledText(newPassword, currentIndex))
+          currentIndex++
+        } else {
+          clearInterval(interval)
+          setIsGenerating(false)
+          setIsInitialLoad(false)
           setPasswordHistory([newPassword])
           isFirstLoad.current = false
+        }
+      }, 50)
+
+      return () => clearInterval(interval)
+    }
+  }, []) // Solo al primo caricamento
+
+  // Effetto separato per le modifiche alle opzioni
+  useEffect(() => {
+    if (!isFirstLoad.current && !isManualGeneration) {
+      setIsGenerating(true)
+      
+      const chars = 'abcdefghijklmnopqrstuvwxyz'
+        + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
+        + (useNumbers ? '0123456789' : '')
+        + (useSpecialChars ? '!@#$%^&*()_+-=[]{}|;:,.<>?' : '')
+
+      let newPassword = ''
+      for (let i = 0; i < length; i++) {
+        newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+
+      setPassword(newPassword)
+
+      let currentIndex = 0
+      const interval = setInterval(() => {
+        if (currentIndex <= length) {
+          setScrambledText(generateScrambledText(newPassword, currentIndex))
+          currentIndex++
         } else {
-          // Aggiungi la notifica quando la password viene generata
+          clearInterval(interval)
+          setIsGenerating(false)
           setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
           toast.success(t.passwordGenerated)
         }
-      }
-    }, 50)
+      }, 50)
 
-    return () => clearInterval(interval)
-  }, [length, useNumbers, useSpecialChars, useUppercase, t])
+      return () => clearInterval(interval)
+    }
+    setIsManualGeneration(false)
+  }, [length, useNumbers, useSpecialChars, useUppercase])
 
   const generatePassword = useCallback(() => {
+    setIsManualGeneration(true)
     setIsGenerating(true)
     
     const chars = 'abcdefghijklmnopqrstuvwxyz'
@@ -333,7 +386,6 @@ function App() {
       newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
     }
 
-    // Impostiamo subito la password finale
     setPassword(newPassword)
 
     let currentIndex = 0
@@ -360,9 +412,11 @@ function App() {
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light'
     setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
     document.querySelector(':root')?.classList.toggle('dark')
   }
 
+  // Initialize theme on first load
   useEffect(() => {
     const root = document.querySelector(':root') as HTMLElement
     if (theme === 'dark') {
@@ -575,7 +629,7 @@ function App() {
                   >
                     <div className="flex-1 relative">
                       <span className="font-mono text-sm text-foreground truncate block select-none">
-                        {pwd}
+                        {colorizePassword(pwd)}
                       </span>
                       <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
                     </div>
@@ -728,7 +782,13 @@ function App() {
                   >
                     <div className="relative select-none cursor-default">
                       <div className="whitespace-nowrap overflow-hidden text-foreground">
-                        {isGenerating ? scrambledText : (password || t.placeholder)}
+                        {isGenerating 
+                          ? scrambledText 
+                          : (password 
+                              ? colorizePassword(password) 
+                              : t.placeholder
+                            )
+                        }
                       </div>
                       <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
                     </div>
@@ -834,7 +894,18 @@ function App() {
                   </div>
 
                   <div className="flex items-center justify-between text-foreground">
-                    <Label className="cursor-pointer">{t.specialChars}</Label>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={language + "specialChars"}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        variants={textVariants}
+                        transition={textTransition}
+                      >
+                        <Label className="cursor-pointer">{t.specialChars}</Label>
+                      </motion.div>
+                    </AnimatePresence>
                     <Switch 
                       checked={useSpecialChars}
                       onCheckedChange={setUseSpecialChars}
@@ -843,7 +914,18 @@ function App() {
                   </div>
 
                   <div className="flex items-center justify-between text-foreground">
-                    <Label className="cursor-pointer">{t.numbers}</Label>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={language + "numbers"}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        variants={textVariants}
+                        transition={textTransition}
+                      >
+                        <Label className="cursor-pointer">{t.numbers}</Label>
+                      </motion.div>
+                    </AnimatePresence>
                     <Switch 
                       checked={useNumbers}
                       onCheckedChange={setUseNumbers}
@@ -852,7 +934,18 @@ function App() {
                   </div>
 
                   <div className="flex items-center justify-between text-foreground">
-                    <Label className="cursor-pointer">{t.uppercase}</Label>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={language + "uppercase"}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        variants={textVariants}
+                        transition={textTransition}
+                      >
+                        <Label className="cursor-pointer">{t.uppercase}</Label>
+                      </motion.div>
+                    </AnimatePresence>
                     <Switch 
                       checked={useUppercase}
                       onCheckedChange={setUseUppercase}
@@ -887,18 +980,25 @@ function App() {
                             }}
                             className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full"
                           />
-                          <span>{t.generating}</span>
+                          <motion.span
+                            key={language + "generating"}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            variants={textVariants}
+                            transition={textTransition}
+                          >
+                            {t.generating}
+                          </motion.span>
                         </motion.div>
                       ) : (
                         <motion.span
-                          key="generate"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{
-                            duration: 0.2,
-                            ease: "easeOut"
-                          }}
+                          key={language + "generate"}
+                          initial="enter"
+                          animate="center"
+                          exit="exit"
+                          variants={textVariants}
+                          transition={textTransition}
                         >
                           {t.generate}
                         </motion.span>
