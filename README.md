@@ -1,50 +1,34 @@
-# React + TypeScript + Vite
+# Password Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern and secure password generator built with React, TypeScript, and Framer Motion. Features a clean UI with dark mode support, multiple language options, and customizable themes.
 
-Currently, two official plugins are available:
+![alt text](image.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- 🔐 Generate secure passwords with customizable options
+- 🌍 Multiple language support (English, Italian, Spanish, German, French)
+- 🎨 Customizable color themes
+- 🌓 Dark/Light mode
+- 📋 Password history with copy functionality
+- 💪 Password strength indicator
+- ✨ Smooth animations with Framer Motion
+- 📱 Responsive design
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Tech Stack
 
-- Configure the top-level `parserOptions` property like this:
+- React
+- TypeScript
+- Vite
+- Framer Motion
+- Tailwind CSS
+- Shadcn/ui
+- React Colorful
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Contributing
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+Contributions are welcome! Feel free to open issues and submit pull requests.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+## License
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+[MIT License](LICENSE)
