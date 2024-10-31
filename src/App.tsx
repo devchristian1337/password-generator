@@ -254,15 +254,6 @@ function calculatePasswordStrength(password: string): number {
 }
 
 function getStrengthColor(strength: number) {
-  if (strength < 20) return 'text-red-500'
-  if (strength < 40) return 'text-orange-500'
-  if (strength < 60) return 'text-yellow-500'
-  if (strength < 80) return 'text-lime-500'
-  return 'text-green-500'
-}
-
-// Aggiungi questa nuova funzione per il colore della barra
-function getStrengthBarColor(strength: number) {
   if (strength < 20) return 'bg-red-500'
   if (strength < 40) return 'bg-orange-500'
   if (strength < 60) return 'bg-yellow-500'
@@ -509,28 +500,25 @@ function getStrengthText(strength: number, t: typeof translations['en']) {
   return t.veryStrong
 }
 
-// Aggiungi queste varianti di animazione
+// Modifica queste varianti di animazione
 const strengthVariants = {
   initial: { 
     scale: 0.95,
     opacity: 0 
   },
-  animate: { 
+  animate: (isInitialLoad: boolean) => ({ 
     scale: 1,
     opacity: 1,
     transition: {
       type: "spring",
       stiffness: 500,
       damping: 30,
-      duration: 0.2
+      delay: isInitialLoad ? 1.1 : 0
     }
-  },
+  }),
   exit: { 
     scale: 0.95,
-    opacity: 0,
-    transition: {
-      duration: 0.1
-    }
+    opacity: 0 
   }
 }
 
@@ -574,7 +562,7 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [scrambledText, setScrambledText] = useState<(string | JSX.Element)[]>([])
 
-  // Aggiungi questo state per tracciare se è il primo caricamento
+  // Modifica la gestione di isInitialLoad
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   // Aggiungi questo state per tracciare se la password è stata generata manualmente
@@ -629,6 +617,7 @@ function App() {
     return colorizePassword(text, isPasswordVisible)
   }
 
+  // Modifica l'effect del caricamento iniziale
   useEffect(() => {
     if (isFirstLoad.current) {
       const chars = 'abcdefghijklmnopqrstuvwxyz'
@@ -642,10 +631,14 @@ function App() {
       }
 
       setPassword(newPassword)
-      setIsInitialLoad(false)
       setPasswordHistory([newPassword])
-      // Imposta la visibilità iniziale per la prima password
       setHistoryPasswordsVisibility({ 0: true })
+      
+      // Imposta isInitialLoad a false dopo un ritardo
+      setTimeout(() => {
+        setIsInitialLoad(false)
+      }, 1500) // Delay leggermente più lungo del delay dell'animazione
+      
       isFirstLoad.current = false
     }
   }, [length, useNumbers, useSpecialChars, useUppercase])
@@ -711,6 +704,7 @@ function App() {
     }
   }, [password, isGenerating, t.passwordCopied])
 
+  // Assicurati che generatePassword non reimposti isInitialLoad
   const generatePassword = useCallback(() => {
     if (useCustomPattern) {
       if (!isValidPattern(customPattern)) {
@@ -745,7 +739,6 @@ function App() {
         .join('')
     }
 
-    // Imposta immediatamente la password
     setPassword(newPassword)
 
     let currentIndex = 0
@@ -756,14 +749,12 @@ function App() {
       } else {
         clearInterval(interval)
         setIsGenerating(false)
-        // Aggiorna la cronologia preservando gli stati di visibilità esistenti
         setPasswordHistory(prev => {
           const newHistory = [newPassword, ...prev].slice(0, 5)
           setHistoryPasswordsVisibility(prevVisibility => {
             const newVisibility: PasswordVisibility = {
-              0: isPasswordVisible, // La nuova password usa lo stato di visibilità corrente
+              0: isPasswordVisible,
               ...Object.fromEntries(
-                // Sposta gli stati di visibilità esistenti di una posizione
                 Object.entries(prevVisibility)
                   .filter(([key]) => Number(key) < newHistory.length - 1)
                   .map(([key, value]) => [Number(key) + 1, value])
@@ -1683,7 +1674,7 @@ function App() {
                   transition={{ delay: 0.8, duration: 0.3 }}
                 >
                   <motion.div
-                    className={`h-full ${getStrengthBarColor(calculatePasswordStrength(password))}`}
+                    className={`h-full ${getStrengthColor(calculatePasswordStrength(password))}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${calculatePasswordStrength(password)}%` }}
                   />
@@ -1697,8 +1688,9 @@ function App() {
                       variants={strengthVariants}
                       initial="initial"
                       animate="animate"
+                      custom={isInitialLoad}
                       exit="exit"
-                      className={`text-center text-sm ${getStrengthColor(calculatePasswordStrength(password))}`}
+                      className={`text-center text-sm ${getStrengthColor(calculatePasswordStrength(password)).replace('bg-', 'text-')}`}
                     >
                       {getStrengthText(calculatePasswordStrength(password), t as typeof translations['en'])}
                     </motion.p>
