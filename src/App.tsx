@@ -254,6 +254,15 @@ function calculatePasswordStrength(password: string): number {
 }
 
 function getStrengthColor(strength: number) {
+  if (strength < 20) return 'text-red-500'
+  if (strength < 40) return 'text-orange-500'
+  if (strength < 60) return 'text-yellow-500'
+  if (strength < 80) return 'text-lime-500'
+  return 'text-green-500'
+}
+
+// Aggiungi questa nuova funzione per il colore della barra
+function getStrengthBarColor(strength: number) {
   if (strength < 20) return 'bg-red-500'
   if (strength < 40) return 'bg-orange-500'
   if (strength < 60) return 'bg-yellow-500'
@@ -513,12 +522,15 @@ const strengthVariants = {
       type: "spring",
       stiffness: 500,
       damping: 30,
-      delay: 1.1
+      duration: 0.2
     }
   },
   exit: { 
     scale: 0.95,
-    opacity: 0 
+    opacity: 0,
+    transition: {
+      duration: 0.1
+    }
   }
 }
 
@@ -1671,7 +1683,7 @@ function App() {
                   transition={{ delay: 0.8, duration: 0.3 }}
                 >
                   <motion.div
-                    className={`h-full ${getStrengthColor(calculatePasswordStrength(password))}`}
+                    className={`h-full ${getStrengthBarColor(calculatePasswordStrength(password))}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${calculatePasswordStrength(password)}%` }}
                   />
@@ -1686,7 +1698,7 @@ function App() {
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className={`text-center text-sm ${getStrengthColor(calculatePasswordStrength(password)).replace('bg-', 'text-')}`}
+                      className={`text-center text-sm ${getStrengthColor(calculatePasswordStrength(password))}`}
                     >
                       {getStrengthText(calculatePasswordStrength(password), t as typeof translations['en'])}
                     </motion.p>
