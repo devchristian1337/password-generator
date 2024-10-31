@@ -645,17 +645,7 @@ function App() {
 
   // Modifica l'effect per le opzioni
   useEffect(() => {
-    if (!isFirstLoad.current && !isManualGeneration) {
-      // Disattiva l'opzione del pattern personalizzato quando si modifica la lunghezza
-      if (useCustomPattern) {
-        setUseCustomPattern(false)
-      }
-      
-      // Aggiungi questo controllo per evitare l'animazione al primo caricamento
-      if (isInitialLoad) {
-        return;
-      }
-      
+    if (!isFirstLoad.current) {
       setIsGenerating(true)
       
       const chars = 'abcdefghijklmnopqrstuvwxyz'
@@ -684,7 +674,6 @@ function App() {
 
       return () => clearInterval(interval)
     }
-    setIsManualGeneration(false)
   }, [length, useNumbers, useSpecialChars, useUppercase])
 
   const handlePatternChange = (value: string) => {
@@ -721,7 +710,6 @@ function App() {
       }
     }
 
-    setIsManualGeneration(true)
     setIsGenerating(true)
     
     let newPassword: string
@@ -739,8 +727,6 @@ function App() {
         .join('')
     }
 
-    setPassword(newPassword)
-
     let currentIndex = 0
     const interval = setInterval(() => {
       if (currentIndex <= newPassword.length) {
@@ -749,27 +735,14 @@ function App() {
       } else {
         clearInterval(interval)
         setIsGenerating(false)
-        setPasswordHistory(prev => {
-          const newHistory = [newPassword, ...prev].slice(0, 5)
-          setHistoryPasswordsVisibility(prevVisibility => {
-            const newVisibility: PasswordVisibility = {
-              0: isPasswordVisible,
-              ...Object.fromEntries(
-                Object.entries(prevVisibility)
-                  .filter(([key]) => Number(key) < newHistory.length - 1)
-                  .map(([key, value]) => [Number(key) + 1, value])
-              )
-            }
-            return newVisibility
-          })
-          return newHistory
-        })
+        setPassword(newPassword)
+        setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
         toast.success(t.passwordGenerated)
       }
     }, 50)
 
     return () => clearInterval(interval)
-  }, [length, useSpecialChars, useNumbers, useUppercase, useCustomPattern, customPattern, isPasswordVisible])
+  }, [length, useSpecialChars, useNumbers, useUppercase, useCustomPattern, customPattern])
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light'
@@ -1562,12 +1535,12 @@ function App() {
             <CardContent className="space-y-6">
               {/* Password Display with Copy Button */}
               <motion.div 
-                className="relative flex items-center bg-muted rounded-lg p-4 group min-h-[60px]"
+                className="relative flex items-center bg-muted rounded-lg p-4 group min-h-[60px] overflow-hidden"
                 variants={passwordDisplayVariants}
                 whileHover="hover"
               >
                 <motion.div 
-                  className="flex-1 text-center font-mono text-xl pr-24 relative"
+                  className="flex-1 text-center font-mono text-xl pr-24 relative w-full"
                   animate={{
                     scale: isGenerating ? [1, 1.02, 1] : 1,
                     transition: {
@@ -1577,7 +1550,7 @@ function App() {
                   }}
                 >
                   <div className="relative select-none cursor-default w-full">
-                    <div className="whitespace-nowrap overflow-x-hidden text-foreground min-h-[28px] flex items-center justify-center">
+                    <div className="whitespace-nowrap overflow-x-auto scrollbar-hide text-foreground min-h-[28px] flex items-center justify-center max-w-full">
                       {isGenerating 
                         ? scrambledText 
                         : (password 
