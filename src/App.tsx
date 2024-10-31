@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -5,7 +6,7 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { motion, AnimatePresence } from "framer-motion"
-import { Copy, Check, Sun, Moon, History, Palette, Trash2, X, Menu, ChevronDown } from "lucide-react"
+import { Copy, Check, Sun, Moon, History, Palette, Trash2, X, Menu, ChevronDown, Loader2, Eye, EyeOff } from "lucide-react"
 import { 
   Popover,
   PopoverContent,
@@ -77,6 +78,8 @@ const translations = {
     theme: "Theme",
     darkMode: "Dark Mode",
     lightMode: "Light Mode",
+    show: "Show password",
+    hide: "Hide password",
   },
   it: {
     title: "Generatore di Password",
@@ -112,6 +115,8 @@ const translations = {
     theme: "Tema",
     darkMode: "Modalità Scura",
     lightMode: "Modalità Chiara",
+    show: "Mostra password",
+    hide: "Nascondi password",
   },
   es: {
     title: "Generador de Contraseñas",
@@ -147,6 +152,8 @@ const translations = {
     theme: "Tema",
     darkMode: "Modo Oscuro",
     lightMode: "Modo Claro",
+    show: "Mostrar contraseña",
+    hide: "Ocultar contraseña",
   },
   de: {
     title: "Passwort-Generator",
@@ -182,6 +189,8 @@ const translations = {
     theme: "Thema",
     darkMode: "Dunkelmodus",
     lightMode: "Hellmodus",
+    show: "Passwort anzeigen",
+    hide: "Passwort ausblenden",
   },
   fr: {
     title: "Générateur de Mot de Passe",
@@ -217,6 +226,8 @@ const translations = {
     theme: "Thème",
     darkMode: "Mode Sombre",
     lightMode: "Mode Clair",
+    show: "Afficher le mot de passe",
+    hide: "Masquer le mot de passe",
   }
 } as const
 
@@ -240,16 +251,6 @@ function calculatePasswordStrength(password: string): number {
   
   // Normalizza il punteggio a 100
   return Math.min(100, score)
-}
-
-type TranslationType = typeof translations[keyof typeof translations]
-
-function getStrengthLabel(strength: number, t: TranslationType) {
-  if (strength < 20) return t.veryWeak
-  if (strength < 40) return t.weak
-  if (strength < 60) return t.moderate
-  if (strength < 80) return t.strong
-  return t.veryStrong
 }
 
 function getStrengthColor(strength: number) {
@@ -279,15 +280,25 @@ function getBrowserLanguage(): 'en' | 'it' | 'es' | 'de' | 'fr' {
 }
 
 // Aggiungi questa funzione di utilità
-const colorizePassword = (password: string) => {
+const colorizePassword = (password: string, isVisible: boolean) => {
   return password.split('').map((char, index) => {
+    let styledChar;
     if (/[0-9]/.test(char)) {
-      return <span key={index} className="text-primary">{char}</span>
+      styledChar = <span className="text-primary">{char}</span>
     } else if (/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(char)) {
-      return <span key={index} style={{ color: '#fc4f66' }}>{char}</span>
+      styledChar = <span style={{ color: '#fc4f66' }}>{char}</span>
+    } else {
+      styledChar = char;
     }
-    return char
-  })
+
+    return (
+      <AnimatedCharacter 
+        key={index} 
+        char={styledChar} 
+        isVisible={isVisible}
+      />
+    );
+  });
 }
 
 const generateFromPattern = (pattern: string): string => {
@@ -311,6 +322,213 @@ const generateFromPattern = (pattern: string): string => {
 const isValidPattern = (pattern: string): boolean => {
   const validChars = ['a', 'A', '0', '#', '*']
   return pattern.split('').every(char => validChars.includes(char))
+}
+
+// Aggiungi queste varianti di animazione
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.15,
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
+}
+
+const cardVariants = {
+  hidden: { 
+    opacity: 0,
+    y: 20,
+    scale: 0.95,
+    rotateX: 20
+  },
+  visible: { 
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    rotateX: 0,
+    transition: {
+      type: "spring",
+      stiffness: 150,
+      damping: 12,
+      duration: 0.6
+    }
+  }
+}
+
+const passwordDisplayVariants = {
+  initial: { 
+    scale: 1,
+    boxShadow: "0px 0px 0px rgba(0,0,0,0.2)"
+  },
+  hover: { 
+    scale: 1.02,
+    boxShadow: "0px 5px 15px rgba(0,0,0,0.2)",
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 10
+    }
+  }
+}
+
+// Aggiungi queste varianti di animazione
+const optionsContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.5
+    }
+  }
+}
+
+const optionItemVariants = {
+  hidden: { 
+    opacity: 0, 
+    x: -20,
+    scale: 0.95
+  },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 150,
+      damping: 15
+    }
+  }
+}
+
+const sliderVariants = {
+  hidden: { 
+    opacity: 0,
+    x: -50
+  },
+  visible: { 
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 20
+    }
+  }
+}
+
+const copyButtonVariants = {
+  initial: { 
+    scale: 1,
+    opacity: 0.7
+  },
+  hover: { 
+    scale: 1.05,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 10
+    }
+  },
+  tap: { 
+    scale: 0.95,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 15
+    }
+  },
+  success: {
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 200,
+      damping: 10
+    }
+  }
+}
+
+// Modifica il componente AnimatedCharacter per un'animazione più futuristica
+const AnimatedCharacter = ({ char, isVisible }: { char: string | JSX.Element, isVisible: boolean }) => {
+  return (
+    <motion.span
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="inline-block relative"
+    >
+      <motion.span
+        initial={false}
+        animate={{
+          opacity: isVisible ? 1 : 0,
+          scale: isVisible ? 1 : 0.8,
+          transition: { duration: 0.15 }
+        }}
+        className="inline-block"
+      >
+        {char}
+      </motion.span>
+      <motion.span
+        initial={false}
+        animate={{
+          opacity: isVisible ? 0 : 1,
+          scale: isVisible ? 0.8 : 1,
+          transition: { duration: 0.15 }
+        }}
+        className="absolute left-0 text-primary"
+      >
+        •
+      </motion.span>
+    </motion.span>
+  )
+}
+
+// Aggiungi questo nuovo tipo all'inizio del file
+type PasswordVisibility = {
+  [key: number]: boolean;
+};
+
+function getStrengthText(strength: number, t: typeof translations['en']) {
+  if (strength < 20) return t.veryWeak
+  if (strength < 40) return t.weak
+  if (strength < 60) return t.moderate
+  if (strength < 80) return t.strong
+  return t.veryStrong
+}
+
+// Aggiungi queste varianti di animazione
+const strengthVariants = {
+  initial: { 
+    scale: 0.95,
+    opacity: 0 
+  },
+  animate: { 
+    scale: 1,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 500,
+      damping: 30,
+      delay: 1.1
+    }
+  },
+  exit: { 
+    scale: 0.95,
+    opacity: 0 
+  }
+}
+
+// Aggiungi questa funzione di utilità per ottenere il livello di forza
+function getStrengthLevel(strength: number): number {
+  if (strength < 20) return 1 // very weak
+  if (strength < 40) return 2 // weak
+  if (strength < 60) return 3 // moderate
+  if (strength < 80) return 4 // strong
+  return 5 // very strong
 }
 
 function App() {
@@ -357,6 +575,23 @@ function App() {
   // Aggiungi questo state per gestire le sezioni aperte
   const [openSection, setOpenSection] = useState<string | null>(null)
 
+  // Aggiungi questo state per mascherare la password
+  const [isPasswordVisible, setIsPasswordVisible] = useState(true)
+
+  // Aggiungi questo state per gestire la visibilità delle singole password nella cronologia
+  const [historyPasswordsVisibility, setHistoryPasswordsVisibility] = useState<PasswordVisibility>({})
+
+  // Aggiungi questo stato per tracciare quale password è in hover
+  const [hoveredPasswordIndex, setHoveredPasswordIndex] = useState<number | null>(null);
+
+  // Aggiungi questa funzione per gestire la visibilità delle singole password nella cronologia
+  const toggleHistoryPasswordVisibility = (index: number) => {
+    setHistoryPasswordsVisibility(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
   // Aggiungi questo effect per salvare la preferenza dell'utente
   useEffect(() => {
     localStorage.setItem('preferredLanguage', language)
@@ -379,11 +614,10 @@ function App() {
       }
     }
     
-    return colorizePassword(text)
+    return colorizePassword(text, isPasswordVisible)
   }
 
   useEffect(() => {
-    // Non generare una nuova password se stiamo solo cambiando lingua
     if (isFirstLoad.current) {
       const chars = 'abcdefghijklmnopqrstuvwxyz'
         + (useUppercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '')
@@ -398,9 +632,11 @@ function App() {
       setPassword(newPassword)
       setIsInitialLoad(false)
       setPasswordHistory([newPassword])
+      // Imposta la visibilità iniziale per la prima password
+      setHistoryPasswordsVisibility({ 0: true })
       isFirstLoad.current = false
     }
-  }, []) // Solo al primo caricamento
+  }, [length, useNumbers, useSpecialChars, useUppercase])
 
   // Modifica l'effect per le opzioni
   useEffect(() => {
@@ -454,6 +690,15 @@ function App() {
     }
   }
 
+  const copyToClipboard = useCallback(() => {
+    if (password && !isGenerating) {
+      navigator.clipboard.writeText(password)
+      setIsCopied(true)
+      toast.success(t.passwordCopied)
+      setTimeout(() => setIsCopied(false), 1000)
+    }
+  }, [password, isGenerating, t.passwordCopied])
+
   const generatePassword = useCallback(() => {
     if (useCustomPattern) {
       if (!isValidPattern(customPattern)) {
@@ -488,6 +733,7 @@ function App() {
         .join('')
     }
 
+    // Imposta immediatamente la password
     setPassword(newPassword)
 
     let currentIndex = 0
@@ -498,18 +744,29 @@ function App() {
       } else {
         clearInterval(interval)
         setIsGenerating(false)
-        setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
+        // Aggiorna la cronologia preservando gli stati di visibilità esistenti
+        setPasswordHistory(prev => {
+          const newHistory = [newPassword, ...prev].slice(0, 5)
+          setHistoryPasswordsVisibility(prevVisibility => {
+            const newVisibility: PasswordVisibility = {
+              0: isPasswordVisible, // La nuova password usa lo stato di visibilità corrente
+              ...Object.fromEntries(
+                // Sposta gli stati di visibilità esistenti di una posizione
+                Object.entries(prevVisibility)
+                  .filter(([key]) => Number(key) < newHistory.length - 1)
+                  .map(([key, value]) => [Number(key) + 1, value])
+              )
+            }
+            return newVisibility
+          })
+          return newHistory
+        })
         toast.success(t.passwordGenerated)
       }
     }, 50)
-  }, [length, useSpecialChars, useNumbers, useUppercase, useCustomPattern, customPattern, t])
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(password)
-    setIsCopied(true)
-    toast.success(t.passwordCopied)
-    setTimeout(() => setIsCopied(false), 1000)
-  }
+    return () => clearInterval(interval)
+  }, [length, useSpecialChars, useNumbers, useUppercase, useCustomPattern, customPattern, isPasswordVisible])
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light'
@@ -583,12 +840,25 @@ function App() {
   }
 
   const deletePassword = (index: number) => {
-    setPasswordHistory(prev => prev.filter((_, i) => i !== index))
+    setPasswordHistory(prev => {
+      const newHistory = prev.filter((_, i) => i !== index)
+      // Aggiorna la visibilità ricalcolando gli indici
+      setHistoryPasswordsVisibility(prev => {
+        const newVisibility: PasswordVisibility = {}
+        newHistory.forEach((_, i) => {
+          // Prendi lo stato di visibilità dalla password successiva nell'array precedente
+          newVisibility[i] = prev[i + (i >= index ? 1 : 0)]
+        })
+        return newVisibility
+      })
+      return newHistory
+    })
     toast.success(t.passwordDeleted)
   }
 
   const clearHistory = () => {
     setPasswordHistory([])
+    setHistoryPasswordsVisibility({}) // Reset della visibilità quando la cronologia viene svuotata
     toast.success(t.historyCleared)
   }
 
@@ -598,24 +868,17 @@ function App() {
     transition: { type: "spring", stiffness: 400, damping: 17 }
   }
 
-  const textVariants = {
-    enter: { opacity: 0 },
-    center: { opacity: 1 },
-    exit: { opacity: 0 }
-  }
-
-  const textTransition = {
-    duration: 0.3,
-    ease: "easeInOut"
-  }
-
   return (
     <div className="min-h-screen bg-background relative pb-16" data-color={primaryColor}>
       <motion.div 
         className="absolute top-4 right-4 flex gap-2 z-50 bg-background/80 backdrop-blur-sm p-2 rounded-lg"
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        transition={{ 
+          duration: 0.3,
+          delay: 0.1,
+          ease: "easeOut"
+        }}
       >
         {/* Nascondi i pulsanti su mobile e mostra il menu hamburger */}
         <div className="hidden md:flex gap-2">
@@ -729,19 +992,51 @@ function App() {
                   passwordHistory.map((pwd, index) => (
                     <div 
                       key={index}
-                      className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors relative group cursor-default"
+                      className="relative flex items-center bg-muted rounded-lg p-2 group min-h-[40px]"
+                      onMouseEnter={() => setHoveredPasswordIndex(index)}
+                      onMouseLeave={() => setHoveredPasswordIndex(null)}
                     >
-                      <div className="flex-1 relative">
-                        <span className="font-mono text-sm text-foreground truncate block select-none">
-                          {colorizePassword(pwd)}
-                        </span>
-                        <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
+                      <div className="flex-1 font-mono text-sm text-foreground truncate pr-24">
+                        {colorizePassword(pwd, historyPasswordsVisibility[index] ?? true)}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
+                      <div className="absolute right-2 flex items-center gap-1">
+                        <motion.button
+                          className="p-2 rounded-md hover:bg-muted-foreground/10"
+                          variants={copyButtonVariants}
+                          initial="initial"
+                          whileHover="hover"
+                          whileTap="tap"
+                          onClick={() => toggleHistoryPasswordVisibility(index)}
+                        >
+                          {(historyPasswordsVisibility[index] ?? true) ? (
+                            <motion.div
+                              key="eye"
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              key="eye-off"
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <EyeOff className="h-4 w-4" />
+                            </motion.div>
+                          )}
+                        </motion.button>
+                        <motion.button
+                          className="p-2 rounded-md hover:bg-muted-foreground/10"
+                          variants={copyButtonVariants}
+                          initial="initial"
+                          whileHover="hover"
+                          whileTap="tap"
+                          animate={copiedHistoryIndex === index ? "success" : "initial"}
                           onClick={() => {
                             navigator.clipboard.writeText(pwd)
                             setCopiedHistoryIndex(index)
@@ -753,35 +1048,67 @@ function App() {
                             {copiedHistoryIndex === index ? (
                               <motion.div
                                 key="check"
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.5 }}
-                                className="text-green-500"
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -5 }}
+                                transition={{ duration: 0.2 }}
                               >
                                 <Check className="h-4 w-4" />
                               </motion.div>
                             ) : (
                               <motion.div
                                 key="copy"
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.5 }}
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -5 }}
+                                transition={{ duration: 0.2 }}
                               >
                                 <Copy className="h-4 w-4" />
                               </motion.div>
                             )}
                           </AnimatePresence>
-                        </Button>
-                        <div className="w-0 group-hover:w-8 overflow-hidden transition-all duration-200">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => deletePassword(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        </motion.button>
+                        <AnimatePresence>
+                          {hoveredPasswordIndex === index && (
+                            <motion.div
+                              initial={{ width: 0, opacity: 0 }}
+                              animate={{ 
+                                width: "32px",
+                                opacity: 1,
+                                transition: {
+                                  width: {
+                                    duration: 0.2,
+                                    ease: "easeOut"
+                                  },
+                                  opacity: {
+                                    duration: 0.1,
+                                    delay: 0.1
+                                  }
+                                }
+                              }}
+                              exit={{ 
+                                width: 0,
+                                opacity: 0,
+                                transition: {
+                                  width: {
+                                    duration: 0.2,
+                                    ease: "easeIn"
+                                  },
+                                  opacity: {
+                                    duration: 0.1
+                                  }
+                                }
+                              }}
+                            >
+                              <button
+                                onClick={() => deletePassword(index)}
+                                className="p-2 rounded-md hover:bg-muted-foreground/10"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
                   ))
@@ -1024,16 +1351,51 @@ function App() {
                               {passwordHistory.map((pwd, index) => (
                                 <div 
                                   key={index}
-                                  className="flex items-center justify-between p-2 bg-muted rounded-lg"
+                                  className="relative flex items-center bg-muted rounded-lg p-2 group min-h-[40px]"
+                                  onMouseEnter={() => setHoveredPasswordIndex(index)}
+                                  onMouseLeave={() => setHoveredPasswordIndex(null)}
                                 >
-                                  <div className="flex-1 font-mono text-sm truncate pr-2">
-                                    {colorizePassword(pwd)}
+                                  <div className="flex-1 font-mono text-sm truncate pr-24">
+                                    {colorizePassword(pwd, historyPasswordsVisibility[index] ?? true)}
                                   </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
+                                  <div className="absolute right-2 flex items-center gap-1">
+                                    <motion.button
+                                      className="p-2 rounded-md hover:bg-muted-foreground/10"
+                                      variants={copyButtonVariants}
+                                      initial="initial"
+                                      whileHover="hover"
+                                      whileTap="tap"
+                                      onClick={() => toggleHistoryPasswordVisibility(index)}
+                                    >
+                                      {(historyPasswordsVisibility[index] ?? true) ? (
+                                        <motion.div
+                                          key="eye"
+                                          initial={{ opacity: 0, y: 5 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          exit={{ opacity: 0, y: -5 }}
+                                          transition={{ duration: 0.2 }}
+                                        >
+                                          <Eye className="h-4 w-4" />
+                                        </motion.div>
+                                      ) : (
+                                        <motion.div
+                                          key="eye-off"
+                                          initial={{ opacity: 0, y: 5 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          exit={{ opacity: 0, y: -5 }}
+                                          transition={{ duration: 0.2 }}
+                                        >
+                                          <EyeOff className="h-4 w-4" />
+                                        </motion.div>
+                                      )}
+                                    </motion.button>
+                                    <motion.button
+                                      className="p-2 rounded-md hover:bg-muted-foreground/10"
+                                      variants={copyButtonVariants}
+                                      initial="initial"
+                                      whileHover="hover"
+                                      whileTap="tap"
+                                      animate={copiedHistoryIndex === index ? "success" : "initial"}
                                       onClick={() => {
                                         navigator.clipboard.writeText(pwd)
                                         setCopiedHistoryIndex(index)
@@ -1041,20 +1403,71 @@ function App() {
                                         setTimeout(() => setCopiedHistoryIndex(null), 1000)
                                       }}
                                     >
-                                      {copiedHistoryIndex === index ? (
-                                        <Check className="h-4 w-4" />
-                                      ) : (
-                                        <Copy className="h-4 w-4" />
+                                      <AnimatePresence mode="wait">
+                                        {copiedHistoryIndex === index ? (
+                                          <motion.div
+                                            key="check"
+                                            initial={{ opacity: 0, y: 5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -5 }}
+                                            transition={{ duration: 0.2 }}
+                                          >
+                                            <Check className="h-4 w-4" />
+                                          </motion.div>
+                                        ) : (
+                                          <motion.div
+                                            key="copy"
+                                            initial={{ opacity: 0, y: 5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -5 }}
+                                            transition={{ duration: 0.2 }}
+                                          >
+                                            <Copy className="h-4 w-4" />
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </motion.button>
+                                    <AnimatePresence>
+                                      {hoveredPasswordIndex === index && (
+                                        <motion.div
+                                          initial={{ width: 0, opacity: 0 }}
+                                          animate={{ 
+                                            width: "32px",
+                                            opacity: 1,
+                                            transition: {
+                                              width: {
+                                                duration: 0.2,
+                                                ease: "easeOut"
+                                              },
+                                              opacity: {
+                                                duration: 0.1,
+                                                delay: 0.1
+                                              }
+                                            }
+                                          }}
+                                          exit={{ 
+                                            width: 0,
+                                            opacity: 0,
+                                            transition: {
+                                              width: {
+                                                duration: 0.2,
+                                                ease: "easeIn"
+                                              },
+                                              opacity: {
+                                                duration: 0.1
+                                              }
+                                            }
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() => deletePassword(index)}
+                                            className="p-2 rounded-md hover:bg-muted-foreground/10"
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </button>
+                                        </motion.div>
                                       )}
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => deletePassword(index)}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
+                                    </AnimatePresence>
                                   </div>
                                 </div>
                               ))}
@@ -1102,367 +1515,346 @@ function App() {
         </div>
       </motion.div>
 
-      <div className="flex flex-col md:flex-row items-center justify-center min-h-[calc(100vh-4rem)] p-4 gap-8 pt-20">
+      <motion.div 
+        className="flex flex-col md:flex-row items-center justify-center min-h-[calc(100vh-4rem)] p-4 gap-8 pt-20"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ 
-            duration: 0.8,
-            delay: 0.3,
-            ease: "easeOut"
+          className="w-full max-w-[400px]"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ 
+            opacity: 1, 
+            x: 0,
+            transition: {
+              type: "spring",
+              stiffness: 150,
+              damping: 12,
+              delay: 0.1
+            }
           }}
-          className="w-full max-w-[400px] md:max-w-[500px] order-1 md:order-1"
         >
           <Lottie 
             animationData={animationData}
             loop={true}
             className="w-full h-full"
-            style={{ 
-              filter: theme === 'dark' ? 'brightness(0.8) contrast(1.2)' : 'none'
-            }}
           />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ 
-            duration: 0.5,
-            delay: 0.3,
-            ease: [0.4, 0, 0.2, 1]
-          }}
           className="w-full max-w-md order-2 md:order-2"
+          variants={cardVariants}
         >
-          <Card className="bg-card text-card-foreground">
+          <Card>
             <CardHeader>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={language + "title"}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  variants={textVariants}
-                  transition={textTransition}
-                >
-                  <CardTitle className="text-center">
-                    {t.title}
-                  </CardTitle>
-                </motion.div>
-              </AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <CardTitle className="text-center">{t.title}</CardTitle>
+              </motion.div>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Password Display with Copy Button */}
               <motion.div 
-                className="space-y-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ 
-                  duration: 0.5,
-                  delay: 0.5,
-                  ease: [0.4, 0, 0.2, 1]
-                }}
+                className="relative flex items-center bg-muted rounded-lg p-4 group min-h-[60px]"
+                variants={passwordDisplayVariants}
+                whileHover="hover"
               >
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="flex-1 text-center p-4 bg-muted rounded-lg font-mono text-xl overflow-hidden relative h-[60px] flex items-center justify-center"
-                  >
-                    <div className="relative select-none cursor-default w-full">
-                      <div className="whitespace-nowrap overflow-hidden text-foreground min-h-[28px] flex items-center justify-center">
-                        {isGenerating 
-                          ? scrambledText 
-                          : (password 
-                              ? colorizePassword(password) 
-                              : t.placeholder
-                            )
-                        }
-                      </div>
-                      <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
+                <motion.div 
+                  className="flex-1 text-center font-mono text-xl pr-24"
+                  animate={{
+                    scale: isGenerating ? [1, 1.02, 1] : 1,
+                    transition: {
+                      duration: 0.5,
+                      repeat: isGenerating ? Infinity : 0
+                    }
+                  }}
+                >
+                  <div className="relative select-none cursor-default w-full">
+                    <div className="whitespace-nowrap overflow-hidden text-foreground min-h-[28px] flex items-center justify-center">
+                      {isGenerating 
+                        ? scrambledText 
+                        : (password 
+                            ? colorizePassword(password, isPasswordVisible)
+                            : t.placeholder
+                          )
+                      }
                     </div>
+                    <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
                   </div>
-                  <motion.div {...hoverScale}>
-                    <Button 
-                      variant="outline"
-                      size="icon"
-                      onClick={copyToClipboard}
-                      disabled={!password}
-                      className="h-14 w-14 relative"
+                </motion.div>
+
+                {/* Buttons container */}
+                <div className="absolute right-2 flex items-center gap-1">
+                  {password && !isGenerating && (
+                    <motion.button
+                      className="p-2 rounded-md"
+                      variants={copyButtonVariants}
+                      initial="initial"
+                      whileHover="hover"
+                      whileTap="tap"
+                      onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                      title={isPasswordVisible ? t.hide : t.show}
                     >
                       <AnimatePresence mode="wait">
-                        {isCopied ? (
+                        {isPasswordVisible ? (
                           <motion.div
-                            key="check"
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
-                            className="text-green-500"
+                            key="eye"
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            transition={{ duration: 0.2 }}
                           >
-                            <Check className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </motion.div>
                         ) : (
                           <motion.div
-                            key="copy"
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
+                            key="eye-off"
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            transition={{ duration: 0.2 }}
                           >
-                            <Copy className="h-4 w-4" />
+                            <EyeOff className="h-4 w-4" />
                           </motion.div>
                         )}
                       </AnimatePresence>
-                    </Button>
-                  </motion.div>
-                </div>
+                    </motion.button>
+                  )}
 
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
+                  <motion.button
+                    className="p-2 rounded-md"
+                    variants={copyButtonVariants}
+                    initial="initial"
+                    whileHover="hover"
+                    whileTap="tap"
+                    animate={isCopied ? "success" : "initial"}
+                    onClick={copyToClipboard}
+                    disabled={isGenerating || !password}
+                  >
                     <AnimatePresence mode="wait">
-                      <motion.span
-                        key={language + "strength"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                        className="text-muted-foreground"
-                      >
-                        {t.passwordStrength}
-                      </motion.span>
-                    </AnimatePresence>
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={getStrengthLabel(calculatePasswordStrength(password), t) + language}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                        className="font-medium"
-                      >
-                        {getStrengthLabel(calculatePasswordStrength(password), t)}
-                      </motion.span>
-                    </AnimatePresence>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full ${getStrengthColor(calculatePasswordStrength(password))}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${calculatePasswordStrength(password)}%` }}
-                      transition={{ duration: 0.5 }}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-foreground cursor-pointer">
-                      <AnimatePresence mode="wait">
-                        <motion.span
-                          key={language + "length"}
-                          initial="enter"
-                          animate="center"
-                          exit="exit"
-                          variants={textVariants}
-                          transition={textTransition}
-                          className="inline-block min-w-[6rem]"
+                      {isCopied ? (
+                        <motion.div
+                          key="check"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.2 }}
                         >
-                          {t.length}: {useCustomPattern ? customPattern.length : length}
-                        </motion.span>
-                      </AnimatePresence>
-                    </Label>
-                    <Slider 
+                          <Check className="h-4 w-4" />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="copy"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+                </div>
+              </motion.div>
+
+              {/* Strength Indicator */}
+              <motion.div className="space-y-1">
+                <motion.div 
+                  className="h-2 bg-muted rounded-full overflow-hidden"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.8, duration: 0.3 }}
+                >
+                  <motion.div
+                    className={`h-full ${getStrengthColor(calculatePasswordStrength(password))}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${calculatePasswordStrength(password)}%` }}
+                  />
+                </motion.div>
+                
+                {/* Strength Text con AnimatePresence */}
+                <AnimatePresence mode="wait">
+                  {password && (
+                    <motion.p 
+                      key={getStrengthLevel(calculatePasswordStrength(password))}
+                      variants={strengthVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      className={`text-center text-sm ${getStrengthColor(calculatePasswordStrength(password)).replace('bg-', 'text-')}`}
+                    >
+                      {getStrengthText(calculatePasswordStrength(password), t as typeof translations['en'])}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Options */}
+              <motion.div 
+                className="space-y-4"
+                variants={optionsContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {/* Length Slider */}
+                <motion.div 
+                  className="space-y-2"
+                  variants={sliderVariants}
+                >
+                  <div className="flex items-center justify-between">
+                    <Label>{t.length}</Label>
+                    <span className="text-sm text-muted-foreground">{length}</span>
+                  </div>
+                  <div className={`${useCustomPattern ? "opacity-50 cursor-default" : ""}`}>
+                    <Slider
                       value={[length]}
                       onValueChange={([value]) => setLength(value)}
                       min={8}
                       max={32}
                       step={1}
+                      className={`${useCustomPattern ? "cursor-default" : "cursor-pointer"} [&_[role=slider]]:h-4 [&_[role=slider]]:w-4`}
                       disabled={useCustomPattern}
-                      className={`text-foreground cursor-pointer ${
-                        useCustomPattern ? 'opacity-50' : ''
-                      }`}
                     />
                   </div>
+                </motion.div>
 
-                  <div className="flex items-center justify-between text-foreground">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={language + "specialChars"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                      >
-                        <Label className="cursor-pointer">{t.specialChars}</Label>
-                      </motion.div>
-                    </AnimatePresence>
-                    <Switch 
+                {/* Toggle Options */}
+                <motion.div 
+                  className="space-y-3"
+                  variants={optionsContainerVariants}
+                >
+                  {/* Special Characters */}
+                  <motion.div 
+                    className={`flex items-center justify-between ${useCustomPattern ? "cursor-default" : ""}`}
+                    variants={optionItemVariants}
+                  >
+                    <Label className={useCustomPattern ? "cursor-default" : "cursor-pointer"}>{t.specialChars}</Label>
+                    <Switch
                       checked={useSpecialChars}
                       onCheckedChange={setUseSpecialChars}
-                      className="cursor-pointer"
+                      disabled={useCustomPattern}
+                      className={useCustomPattern ? "!cursor-default" : "!cursor-pointer"}
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between text-foreground">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={language + "numbers"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                      >
-                        <Label className="cursor-pointer">{t.numbers}</Label>
-                      </motion.div>
-                    </AnimatePresence>
-                    <Switch 
+                  {/* Numbers */}
+                  <motion.div 
+                    className={`flex items-center justify-between ${useCustomPattern ? "cursor-default" : ""}`}
+                    variants={optionItemVariants}
+                  >
+                    <Label className={useCustomPattern ? "cursor-default" : "cursor-pointer"}>{t.numbers}</Label>
+                    <Switch
                       checked={useNumbers}
                       onCheckedChange={setUseNumbers}
-                      className="cursor-pointer"
+                      disabled={useCustomPattern}
+                      className={useCustomPattern ? "!cursor-default" : "!cursor-pointer"}
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between text-foreground">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={language + "uppercase"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                      >
-                        <Label className="cursor-pointer">{t.uppercase}</Label>
-                      </motion.div>
-                    </AnimatePresence>
-                    <Switch 
+                  {/* Uppercase */}
+                  <motion.div 
+                    className={`flex items-center justify-between ${useCustomPattern ? "cursor-default" : ""}`}
+                    variants={optionItemVariants}
+                  >
+                    <Label className={useCustomPattern ? "cursor-default" : "cursor-pointer"}>{t.uppercase}</Label>
+                    <Switch
                       checked={useUppercase}
                       onCheckedChange={setUseUppercase}
-                      className="cursor-pointer"
+                      disabled={useCustomPattern}
+                      className={useCustomPattern ? "!cursor-default" : "!cursor-pointer"}
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between text-foreground">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={language + "customPattern"}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        variants={textVariants}
-                        transition={textTransition}
-                      >
-                        <Label className="cursor-pointer">{t.customPattern}</Label>
-                      </motion.div>
-                    </AnimatePresence>
-                    <Switch 
+                  {/* Custom Pattern Option */}
+                  <motion.div 
+                    className="flex items-center justify-between"
+                    variants={optionItemVariants}
+                  >
+                    <Label className="cursor-pointer">{t.customPattern}</Label>
+                    <Switch
                       checked={useCustomPattern}
                       onCheckedChange={setUseCustomPattern}
-                      className="cursor-pointer"
+                      className="!cursor-pointer"
                     />
-                  </div>
+                  </motion.div>
+                </motion.div>
 
+                {/* Custom Pattern Input (conditionally rendered) */}
+                <AnimatePresence>
                   {useCustomPattern && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="space-y-2"
+                      transition={{ duration: 0.2 }}
+                      className="space-y-2 overflow-hidden"
                     >
                       <input
                         type="text"
                         value={customPattern}
                         onChange={(e) => handlePatternChange(e.target.value)}
-                        className={`w-full px-3 py-2 rounded-md border bg-background text-foreground ${
-                          customPattern.length > 0 && customPattern.length < 8 ? 'border-red-500' : ''
-                        }`}
-                        placeholder="aA00##**"
+                        className="w-full p-2 bg-muted rounded-md font-mono"
+                        placeholder="aA0#*"
                       />
-                      <div className="text-xs space-y-1">
-                        <p className="text-muted-foreground">
-                          {t.patternHelp}
-                        </p>
-                        {customPattern.length > 0 && customPattern.length < 8 && (
-                          <p className="text-red-500">
-                            {t.patternTooShort}
-                          </p>
-                        )}
-                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t.patternHelp}
+                      </p>
                     </motion.div>
                   )}
-                </div>
-
-                <motion.div className="w-full">
-                  <motion.button
-                    className={`w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium ${
-                      isGenerating ? 'pointer-events-none' : ''
-                    }`}
-                    {...hoverScale}
-                    onClick={generatePassword}
-                    animate={isManualGeneration && isGenerating ? {
-                      opacity: 0.8,
-                      scale: 0.98 
-                    } : { 
-                      opacity: 1,
-                      scale: 1 
-                    }}
-                    whileHover={isGenerating ? {} : hoverScale.whileHover}
-                    whileTap={isGenerating ? {} : hoverScale.whileTap}
-                  >
-                    <AnimatePresence mode="wait">
-                      {isGenerating ? (
-                        <motion.div
-                          key="generating"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center justify-center gap-2"
-                        >
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{
-                              duration: 1,
-                              repeat: Infinity,
-                              ease: "linear"
-                            }}
-                            className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full"
-                          />
-                          <motion.span
-                            key={language + "generating"}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            variants={textVariants}
-                            transition={textTransition}
-                          >
-                            {t.generating}
-                          </motion.span>
-                        </motion.div>
-                      ) : (
-                        <motion.span
-                          key={language + "generate"}
-                          initial="enter"
-                          animate="center"
-                          exit="exit"
-                          variants={textVariants}
-                          transition={textTransition}
-                        >
-                          {t.generate}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                </motion.div>
+                </AnimatePresence>
               </motion.div>
+
+              {/* Generate Button */}
+              <motion.button
+                className="w-full bg-primary text-primary-foreground rounded-md p-2 mt-4"
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: "0px 5px 15px rgba(0,0,0,0.2)",
+                }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  transition: {
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30
+                  }
+                }}
+                onClick={generatePassword}
+                disabled={isGenerating}
+              >
+                <motion.div className="flex items-center justify-center gap-2">
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{t.generating}</span>
+                    </>
+                  ) : (
+                    <span>{t.generate}</span>
+                  )}
+                </motion.div>
+              </motion.button>
             </CardContent>
           </Card>
         </motion.div>
-      </div>
+      </motion.div>
 
       <motion.div 
         className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2 text-sm text-muted-foreground bg-background/80 backdrop-blur-sm py-2"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
+        transition={{ 
+          duration: 0.3,
+          delay: 0.2,
+          ease: "easeOut"
+        }}
       >
         <span>Made by devchristian1337</span>
         <motion.a
