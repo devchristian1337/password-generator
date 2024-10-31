@@ -1300,7 +1300,7 @@ function App() {
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
+                        exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
@@ -1567,7 +1567,7 @@ function App() {
                 whileHover="hover"
               >
                 <motion.div 
-                  className="flex-1 text-center font-mono text-xl pr-24"
+                  className="flex-1 text-center font-mono text-xl pr-24 relative"
                   animate={{
                     scale: isGenerating ? [1, 1.02, 1] : 1,
                     transition: {
@@ -1577,7 +1577,7 @@ function App() {
                   }}
                 >
                   <div className="relative select-none cursor-default w-full">
-                    <div className="whitespace-nowrap overflow-hidden text-foreground min-h-[28px] flex items-center justify-center">
+                    <div className="whitespace-nowrap overflow-x-hidden text-foreground min-h-[28px] flex items-center justify-center">
                       {isGenerating 
                         ? scrambledText 
                         : (password 
@@ -1586,12 +1586,12 @@ function App() {
                           )
                       }
                     </div>
-                    <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
+                    <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-muted to-transparent pointer-events-none" />
                   </div>
                 </motion.div>
 
-                {/* Buttons container */}
-                <div className="absolute right-2 flex items-center gap-1">
+                {/* Buttons container con sfondo fisso */}
+                <div className="absolute right-2 flex items-center gap-1 z-10 bg-muted">
                   {password && !isGenerating && (
                     <motion.button
                       className="p-2 rounded-md"
