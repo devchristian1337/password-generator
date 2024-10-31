@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { motion, AnimatePresence } from "framer-motion"
 import { Copy, Check, Sun, Moon, History, Palette, Trash2, X, Menu, ChevronDown, Loader2, Eye, EyeOff } from "lucide-react"
-import { 
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
