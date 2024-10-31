@@ -253,12 +253,12 @@ function calculatePasswordStrength(password: string): number {
   return Math.min(100, score)
 }
 
-function getStrengthColor(strength: number) {
-  if (strength < 20) return 'bg-red-500'
-  if (strength < 40) return 'bg-orange-500'
-  if (strength < 60) return 'bg-yellow-500'
-  if (strength < 80) return 'bg-lime-500'
-  return 'bg-green-500'
+function getStrengthColor(strength: number): { bg: string, text: string } {
+  if (strength < 20) return { bg: 'bg-red-500', text: 'text-red-500' }
+  if (strength < 40) return { bg: 'bg-orange-500', text: 'text-orange-500' }
+  if (strength < 60) return { bg: 'bg-yellow-500', text: 'text-yellow-500' }
+  if (strength < 80) return { bg: 'bg-lime-500', text: 'text-lime-500' }
+  return { bg: 'bg-green-500', text: 'text-green-500' }
 }
 
 // Aggiungi questa funzione all'inizio del file, fuori dal componente
@@ -1674,7 +1674,7 @@ function App() {
                   transition={{ delay: 0.8, duration: 0.3 }}
                 >
                   <motion.div
-                    className={`h-full ${getStrengthColor(calculatePasswordStrength(password))}`}
+                    className={`h-full ${getStrengthColor(calculatePasswordStrength(password)).bg}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${calculatePasswordStrength(password)}%` }}
                   />
@@ -1690,7 +1690,7 @@ function App() {
                       animate="animate"
                       custom={isInitialLoad}
                       exit="exit"
-                      className={`text-center text-sm ${getStrengthColor(calculatePasswordStrength(password)).replace('bg-', 'text-')}`}
+                      className={`text-center text-sm ${getStrengthColor(calculatePasswordStrength(password)).text}`}
                     >
                       {getStrengthText(calculatePasswordStrength(password), t as typeof translations['en'])}
                     </motion.p>
