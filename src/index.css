@@ -59,9 +59,16 @@
 @layer base {
   * {
     @apply border-border;
+    /* Nascondi la scrollbar per Chrome, Safari e Opera */
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
   body {
     @apply bg-background text-foreground;
+    /* Nascondi la scrollbar per IE, Edge e Firefox */
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 } 
 

@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { motion, AnimatePresence } from "framer-motion"
-import { Copy, Check, Sun, Moon, History, Palette, Trash2, X } from "lucide-react"
+import { Copy, Check, Sun, Moon, History, Palette, Trash2, X, Menu, ChevronDown } from "lucide-react"
 import { 
   Popover,
   PopoverContent,
@@ -34,6 +34,13 @@ import { toast } from "sonner"
 import { Toaster } from "sonner"
 import { Github } from "lucide-react"
 import { GB, IT, ES, DE, FR } from 'country-flag-icons/react/3x2'
+import Lottie from "lottie-react"
+import animationData from "./assets/animation.json"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 const translations = {
   en: {
@@ -66,6 +73,10 @@ const translations = {
     patternHelp: "Use: a (lowercase), A (uppercase), 0 (numbers), # (special), * (any)",
     invalidPattern: "Invalid pattern. Only use: a, A, 0, #, *",
     patternTooShort: "Pattern must be at least 8 characters long",
+    language: "Language",
+    theme: "Theme",
+    darkMode: "Dark Mode",
+    lightMode: "Light Mode",
   },
   it: {
     title: "Generatore di Password",
@@ -97,6 +108,10 @@ const translations = {
     patternHelp: "Usa: a (minuscole), A (maiuscole), 0 (numeri), # (speciali), * (qualsiasi)",
     invalidPattern: "Pattern non valido. Usa solo: a, A, 0, #, *",
     patternTooShort: "Il pattern deve essere lungo almeno 8 caratteri",
+    language: "Lingua",
+    theme: "Tema",
+    darkMode: "Modalità Scura",
+    lightMode: "Modalità Chiara",
   },
   es: {
     title: "Generador de Contraseñas",
@@ -128,6 +143,10 @@ const translations = {
     patternHelp: "Usa: a (minúsculas), A (mayúsculas), 0 (números), # (especiales), * (cualquier)",
     invalidPattern: "Patrón no válido. Use solo: a, A, 0, #, *",
     patternTooShort: "El patrón debe tener al menos 8 caracteres",
+    language: "Idioma",
+    theme: "Tema",
+    darkMode: "Modo Oscuro",
+    lightMode: "Modo Claro",
   },
   de: {
     title: "Passwort-Generator",
@@ -159,6 +178,10 @@ const translations = {
     patternHelp: "Verwendung: a (Kleinbuchstaben), A (Großbuchstaben), 0 (Zahlen), # (Sonderzeichen), * (beliebig)",
     invalidPattern: "Ungültiges Muster. Verwenden Sie nur: a, A, 0, #, *",
     patternTooShort: "Das Muster muss mindestens 8 Zeichen lang sein",
+    language: "Sprache",
+    theme: "Thema",
+    darkMode: "Dunkelmodus",
+    lightMode: "Hellmodus",
   },
   fr: {
     title: "Générateur de Mot de Passe",
@@ -190,6 +213,10 @@ const translations = {
     patternHelp: "Utilisation: a (minuscules), A (majuscules), 0 (chiffres), # (caractères spéciaux), * (tout)",
     invalidPattern: "Motif invalide. Utilisez uniquement : a, A, 0, #, *",
     patternTooShort: "Le motif doit contenir au moins 8 caractères",
+    language: "Langue",
+    theme: "Thème",
+    darkMode: "Mode Sombre",
+    lightMode: "Mode Clair",
   }
 } as const
 
@@ -326,6 +353,9 @@ function App() {
   // Aggiungi questi nuovi stati
   const [useCustomPattern, setUseCustomPattern] = useState(false)
   const [customPattern, setCustomPattern] = useState('aA00##**')
+
+  // Aggiungi questo state per gestire le sezioni aperte
+  const [openSection, setOpenSection] = useState<string | null>(null)
 
   // Aggiungi questo effect per salvare la preferenza dell'utente
   useEffect(() => {
@@ -580,225 +610,519 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background" data-color={primaryColor}>
+    <div className="min-h-screen bg-background relative pb-16" data-color={primaryColor}>
       <motion.div 
-        className="fixed top-4 right-4 flex gap-2"
+        className="absolute top-4 right-4 flex gap-2 z-50 bg-background/80 backdrop-blur-sm p-2 rounded-lg"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <motion.div {...hoverScale}>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 cursor-pointer"
-              >
-                <Languages className="h-4 w-4" />
-              </Button>
-            </motion.div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setLanguage('en')} className="flex items-center gap-2 cursor-pointer">
-              <GB className="w-4 h-4" />
-              English
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('it')} className="flex items-center gap-2 cursor-pointer">
-              <IT className="w-4 h-4" />
-              Italiano
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('es')} className="flex items-center gap-2 cursor-pointer">
-              <ES className="w-4 h-4" />
-              Español
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('de')} className="flex items-center gap-2 cursor-pointer">
-              <DE className="w-4 h-4" />
-              Deutsch
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLanguage('fr')} className="flex items-center gap-2 cursor-pointer">
-              <FR className="w-4 h-4" />
-              Fran��ais
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Nascondi i pulsanti su mobile e mostra il menu hamburger */}
+        <div className="hidden md:flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <motion.div {...hoverScale}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 cursor-pointer"
+                >
+                  <Languages className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setLanguage('en')} className="flex items-center gap-2 cursor-pointer">
+                <GB className="w-4 h-4" />
+                English
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('it')} className="flex items-center gap-2 cursor-pointer">
+                <IT className="w-4 h-4" />
+                Italiano
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('es')} className="flex items-center gap-2 cursor-pointer">
+                <ES className="w-4 h-4" />
+                Español
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('de')} className="flex items-center gap-2 cursor-pointer">
+                <DE className="w-4 h-4" />
+                Deutsch
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('fr')} className="flex items-center gap-2 cursor-pointer">
+                <FR className="w-4 h-4" />
+                Français
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <motion.div {...hoverScale}>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 cursor-pointer"
-              >
-                <Palette className="h-4 w-4" />
-              </Button>
-            </motion.div>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-3">
-            <div className="space-y-2">
-              <h3 className="font-medium text-sm text-foreground mb-2">Colore principale</h3>
-              <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <motion.div {...hoverScale}>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 cursor-pointer"
-              >
-                <History className="h-4 w-4" />
-              </Button>
-            </motion.div>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-sm text-foreground">Cronologia Password</h3>
-                {passwordHistory.length > 0 && (
-                  <motion.div {...hoverScale}>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>{t.clearHistoryConfirm}</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {t.clearHistoryDescription}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                          <AlertDialogAction onClick={clearHistory}>
-                            {t.clearHistory}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </motion.div>
-                )}
+          <Popover>
+            <PopoverTrigger asChild>
+              <motion.div {...hoverScale}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 cursor-pointer"
+                >
+                  <Palette className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-3">
+              <div className="space-y-2">
+                <h3 className="font-medium text-sm text-foreground mb-2">Colore principale</h3>
+                <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
               </div>
-              {passwordHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-2">
-                  Cronologia vuota.
-                </p>
-              ) : (
-                passwordHistory.map((pwd, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors relative group cursor-default"
-                  >
-                    <div className="flex-1 relative">
-                      <span className="font-mono text-sm text-foreground truncate block select-none">
-                        {colorizePassword(pwd)}
-                      </span>
-                      <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => {
-                          navigator.clipboard.writeText(pwd)
-                          setCopiedHistoryIndex(index)
-                          toast.success(t.passwordCopied)
-                          setTimeout(() => setCopiedHistoryIndex(null), 1000)
-                        }}
-                      >
-                        <AnimatePresence mode="wait">
-                          {copiedHistoryIndex === index ? (
-                            <motion.div
-                              key="check"
-                              initial={{ opacity: 0, scale: 0.5 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.5 }}
-                              className="text-green-500"
-                            >
-                              <Check className="h-4 w-4" />
-                            </motion.div>
-                          ) : (
-                            <motion.div
-                              key="copy"
-                              initial={{ opacity: 0, scale: 0.5 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.5 }}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </Button>
-                      <div className="w-0 group-hover:w-8 overflow-hidden transition-all duration-200">
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <motion.div {...hoverScale}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 cursor-pointer"
+                >
+                  <History className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-2">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-medium text-sm text-foreground">Cronologia Password</h3>
+                  {passwordHistory.length > 0 && (
+                    <motion.div {...hoverScale}>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{t.clearHistoryConfirm}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {t.clearHistoryDescription}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                            <AlertDialogAction onClick={clearHistory}>
+                              {t.clearHistory}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </motion.div>
+                  )}
+                </div>
+                {passwordHistory.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    Cronologia vuota.
+                  </p>
+                ) : (
+                  passwordHistory.map((pwd, index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors relative group cursor-default"
+                    >
+                      <div className="flex-1 relative">
+                        <span className="font-mono text-sm text-foreground truncate block select-none">
+                          {colorizePassword(pwd)}
+                        </span>
+                        <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted to-transparent" />
+                      </div>
+                      <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => deletePassword(index)}
+                          onClick={() => {
+                            navigator.clipboard.writeText(pwd)
+                            setCopiedHistoryIndex(index)
+                            toast.success(t.passwordCopied)
+                            setTimeout(() => setCopiedHistoryIndex(null), 1000)
+                          }}
                         >
-                          <X className="h-4 w-4" />
+                          <AnimatePresence mode="wait">
+                            {copiedHistoryIndex === index ? (
+                              <motion.div
+                                key="check"
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.5 }}
+                                className="text-green-500"
+                              >
+                                <Check className="h-4 w-4" />
+                              </motion.div>
+                            ) : (
+                              <motion.div
+                                key="copy"
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.5 }}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </Button>
+                        <div className="w-0 group-hover:w-8 overflow-hidden transition-all duration-200">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => deletePassword(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+                  ))
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
 
-        <motion.div {...hoverScale}>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleTheme}
-            className="h-10 w-10 cursor-pointer"
-          >
-            <AnimatePresence mode="wait">
-              {theme === 'light' ? (
-                <motion.div
-                  key="moon"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ 
-                    duration: 0.2,
-                    ease: "easeInOut"
-                  }}
+          <motion.div {...hoverScale}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-10 w-10 cursor-pointer"
+            >
+              <AnimatePresence mode="wait">
+                {theme === 'light' ? (
+                  <motion.div
+                    key="moon"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ 
+                      duration: 0.2,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <Moon className="h-4 w-4" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="sun"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ 
+                      duration: 0.2,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <Sun className="h-4 w-4" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Button>
+          </motion.div>
+        </div>
+
+        {/* Menu hamburger per mobile */}
+        <div className="md:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <motion.div {...hoverScale}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10"
                 >
-                  <Moon className="h-4 w-4" />
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto">
+              <motion.div 
+                className="space-y-4 py-6"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Sezione Lingua */}
+                <motion.div className="border-b border-border">
+                  <motion.button
+                    className="flex items-center justify-between w-full py-4"
+                    onClick={() => setOpenSection(openSection === 'language' ? null : 'language')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Languages className="h-4 w-4" />
+                      <h4 className="font-medium">{t.language}</h4>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: openSection === 'language' ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </motion.div>
+                  </motion.button>
+                  <AnimatePresence initial={false}>
+                    {openSection === 'language' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="grid grid-cols-1 gap-2 pb-4">
+                          {[
+                            { code: 'en', label: 'English', icon: GB },
+                            { code: 'it', label: 'Italiano', icon: IT },
+                            { code: 'es', label: 'Español', icon: ES },
+                            { code: 'de', label: 'Deutsch', icon: DE },
+                            { code: 'fr', label: 'Français', icon: FR },
+                          ].map(({ code, label, icon: Icon }) => (
+                            <Button
+                              key={code}
+                              variant={language === code ? "default" : "outline"}
+                              className="w-full justify-start gap-2 h-9"
+                              onClick={() => {
+                                setLanguage(code as typeof language)
+                                setOpenSection(null)
+                              }}
+                            >
+                              <Icon className="w-4 h-4" />
+                              <span>{label}</span>
+                            </Button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
-              ) : (
-                <motion.div
-                  key="sun"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ 
-                    duration: 0.2,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <Sun className="h-4 w-4" />
+
+                {/* Sezione Tema */}
+                <motion.div className="border-b border-border">
+                  <motion.button
+                    className="flex items-center justify-between w-full py-4"
+                    onClick={() => setOpenSection(openSection === 'theme' ? null : 'theme')}
+                  >
+                    <div className="flex items-center gap-2">
+                      {theme === 'light' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                      <h4 className="font-medium">{t.theme}</h4>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: openSection === 'theme' ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </motion.div>
+                  </motion.button>
+                  <AnimatePresence initial={false}>
+                    {openSection === 'theme' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-4">
+                          <Button
+                            variant="outline"
+                            className="w-full justify-between h-9"
+                            onClick={() => {
+                              toggleTheme()
+                              setOpenSection(null)
+                            }}
+                          >
+                            <span>{theme === 'light' ? t.darkMode : t.lightMode}</span>
+                            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </Button>
-        </motion.div>
+
+                {/* Sezione Colore */}
+                <motion.div className="border-b border-border">
+                  <motion.button
+                    className="flex items-center justify-between w-full py-4"
+                    onClick={() => setOpenSection(openSection === 'color' ? null : 'color')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      <h4 className="font-medium">{t.mainColor}</h4>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: openSection === 'color' ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </motion.div>
+                  </motion.button>
+                  <AnimatePresence initial={false}>
+                    {openSection === 'color' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-4">
+                          <div className="p-3 border rounded-lg bg-background">
+                            <HexColorPicker 
+                              color={primaryColor} 
+                              onChange={setPrimaryColor}
+                              style={{ width: '100%' }}
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                {/* Sezione Cronologia */}
+                <motion.div className="border-b border-border">
+                  <motion.button
+                    className="flex items-center justify-between w-full py-4"
+                    onClick={() => setOpenSection(openSection === 'history' ? null : 'history')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <History className="h-4 w-4" />
+                      <h4 className="font-medium">{t.history}</h4>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: openSection === 'history' ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </motion.div>
+                  </motion.button>
+                  <AnimatePresence initial={false}>
+                    {openSection === 'history' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="space-y-2 pb-4">
+                          {passwordHistory.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-2">
+                              {t.emptyHistory}
+                            </p>
+                          ) : (
+                            <>
+                              {passwordHistory.map((pwd, index) => (
+                                <div 
+                                  key={index}
+                                  className="flex items-center justify-between p-2 bg-muted rounded-lg"
+                                >
+                                  <div className="flex-1 font-mono text-sm truncate pr-2">
+                                    {colorizePassword(pwd)}
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(pwd)
+                                        setCopiedHistoryIndex(index)
+                                        toast.success(t.passwordCopied)
+                                        setTimeout(() => setCopiedHistoryIndex(null), 1000)
+                                      }}
+                                    >
+                                      {copiedHistoryIndex === index ? (
+                                        <Check className="h-4 w-4" />
+                                      ) : (
+                                        <Copy className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => deletePassword(index)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              {passwordHistory.length > 0 && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full"
+                                    >
+                                      {t.clearHistory}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>{t.clearHistoryConfirm}</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        {t.clearHistoryDescription}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => {
+                                          clearHistory()
+                                          setOpenSection(null)
+                                        }}
+                                      >
+                                        {t.clearHistory}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              </motion.div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </motion.div>
 
-      <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="flex flex-col md:flex-row items-center justify-center min-h-[calc(100vh-4rem)] p-4 gap-8 pt-20">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ 
+            duration: 0.8,
+            delay: 0.3,
+            ease: "easeOut"
+          }}
+          className="w-full max-w-[400px] md:max-w-[500px] order-1 md:order-1"
+        >
+          <Lottie 
+            animationData={animationData}
+            loop={true}
+            className="w-full h-full"
+            style={{ 
+              filter: theme === 'dark' ? 'brightness(0.8) contrast(1.2)' : 'none'
+            }}
+          />
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -807,7 +1131,7 @@ function App() {
             delay: 0.3,
             ease: [0.4, 0, 0.2, 1]
           }}
-          className="w-full max-w-md"
+          className="w-full max-w-md order-2 md:order-2"
         >
           <Card className="bg-card text-card-foreground">
             <CardHeader>
@@ -1135,7 +1459,7 @@ function App() {
       </div>
 
       <motion.div 
-        className="fixed bottom-4 left-0 right-0 flex items-center justify-center gap-2 text-sm text-muted-foreground"
+        className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2 text-sm text-muted-foreground bg-background/80 backdrop-blur-sm py-2"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
