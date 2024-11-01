@@ -630,6 +630,7 @@ function App() {
         newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
       }
 
+      // Imposta direttamente la password senza effetti
       setPassword(newPassword)
       setPasswordHistory([newPassword])
       setHistoryPasswordsVisibility({ 0: true })
@@ -637,7 +638,7 @@ function App() {
       // Imposta isInitialLoad a false dopo un ritardo
       setTimeout(() => {
         setIsInitialLoad(false)
-      }, 1500) // Delay leggermente più lungo del delay dell'animazione
+      }, 1500)
       
       isFirstLoad.current = false
     }
@@ -645,7 +646,7 @@ function App() {
 
   // Modifica l'effect per le opzioni
   useEffect(() => {
-    if (!isFirstLoad.current) {
+    if (!isFirstLoad.current && !isInitialLoad) {
       setIsGenerating(true)
       
       const chars = 'abcdefghijklmnopqrstuvwxyz'
