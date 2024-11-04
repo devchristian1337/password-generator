@@ -42,6 +42,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import ShimmerButton from "@/components/ui/shimmer-button"
 
 const translations = {
   en: {
@@ -1785,13 +1786,7 @@ function App() {
               </motion.div>
 
               {/* Generate Button */}
-              <motion.button
-                className="w-full bg-primary text-primary-foreground rounded-md p-2 mt-4"
-                whileHover={{ 
-                  scale: 1.02,
-                  boxShadow: "0px 5px 15px rgba(0,0,0,0.2)",
-                }}
-                whileTap={{ scale: 0.98 }}
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ 
                   opacity: 1, 
@@ -1802,20 +1797,27 @@ function App() {
                     damping: 30
                   }
                 }}
-                onClick={generatePassword}
-                disabled={isGenerating}
               >
-                <motion.div className="flex items-center justify-center gap-2">
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>{t.generating}</span>
-                    </>
-                  ) : (
-                    <span>{t.generate}</span>
-                  )}
-                </motion.div>
-              </motion.button>
+                <ShimmerButton
+                  onClick={generatePassword}
+                  disabled={isGenerating}
+                  className="w-full font-medium"
+                  background="hsl(var(--primary))"
+                  shimmerColor="hsl(var(--primary-foreground))"
+                  borderRadius="0.5rem"
+                >
+                  <motion.div className="flex items-center justify-center gap-2">
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>{t.generating}</span>
+                      </>
+                    ) : (
+                      <span>{t.generate}</span>
+                    )}
+                  </motion.div>
+                </ShimmerButton>
+              </motion.div>
             </CardContent>
           </Card>
         </motion.div>
