@@ -773,15 +773,15 @@ function App() {
       root?.style.setProperty('--muted-foreground', `${hsl.h} ${Math.min(30, hsl.s)}% 30%`)
       root?.style.setProperty('--border', `${hsl.h} ${Math.max(10, hsl.s * 0.3)}% 90%`)
     } else {
-      const darkL = Math.max(25, Math.min(hsl.l * 0.85, 65))
+      const darkL = Math.max(45, Math.min(hsl.l * 0.95, 85))
       const darkS = Math.min(hsl.s * 1.2, 100)
       root?.style.setProperty('--primary', `${hsl.h} ${darkS}% ${darkL}%`)
       root?.style.setProperty('--primary-foreground',
         darkL > 65 ? '240 5.9% 10%' : '0 0% 98%'
       )
-      root?.style.setProperty('--muted', `${hsl.h} ${Math.max(8, darkS * 0.2)}% 12%`)
-      root?.style.setProperty('--muted-foreground', `${hsl.h} ${Math.min(25, darkS)}% 85%`)
-      root?.style.setProperty('--border', `${hsl.h} ${Math.max(15, darkS * 0.25)}% 25%`)
+      root?.style.setProperty('--muted', `${hsl.h} ${Math.max(8, darkS * 0.2)}% 15%`)
+      root?.style.setProperty('--muted-foreground', `${hsl.h} ${Math.min(25, darkS)}% 95%`)
+      root?.style.setProperty('--border', `${hsl.h} ${Math.max(15, darkS * 0.25)}% 30%`)
     }
   }, [primaryColor, theme])
 
