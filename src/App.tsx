@@ -565,9 +565,6 @@ function App() {
   // Modifica la gestione di isInitialLoad
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  // Aggiungi questo state per tracciare se la password è stata generata manualmente
-  const [isManualGeneration, setIsManualGeneration] = useState(false)
-
   // Aggiungi questi nuovi stati
   const [useCustomPattern, setUseCustomPattern] = useState(false)
   const [customPattern, setCustomPattern] = useState('aA00##**')
