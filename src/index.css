@@ -138,3 +138,12 @@
     display: none;  /* Chrome, Safari and Opera */
   }
 }
+
+/* Aggiungi alla fine del file */
+.dock {
+  @apply bg-background/80 backdrop-blur-sm p-2 rounded-lg;
+}
+
+.dock-item {
+  @apply hover:text-primary transition-colors;
+}

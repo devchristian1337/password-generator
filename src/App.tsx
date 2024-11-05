@@ -43,6 +43,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import ShimmerButton from "@/components/ui/shimmer-button"
+import Dock, { DockIcon } from "@/components/ui/dock"
 
 const translations = {
   en: {
@@ -206,7 +207,7 @@ const translations = {
     mainColor: "Couleur principale",
     clearHistory: "Vider l'historique",
     clearHistoryConfirm: "Êtes-vous sûr de vouloir vider l'historique des mots de passe?",
-    clearHistoryDescription: "Cette action ne peut être annulée.",
+    clearHistoryDescription: "Cette action ne peut tre annulée.",
     cancel: "Annuler",
     passwordCopied: "Mot de passe copié dans le presse-papiers",
     passwordGenerated: "Nouveau mot de passe généré",
@@ -490,7 +491,7 @@ const AnimatedCharacter = ({ char, isVisible }: { char: string | JSX.Element, is
 
 // Aggiungi questo nuovo tipo all'inizio del file
 type PasswordVisibility = {
-  [key: number]: boolean;
+  [password: string]: boolean;
 };
 
 function getStrengthText(strength: number, t: typeof translations['en']) {
@@ -530,6 +531,34 @@ function getStrengthLevel(strength: number): number {
   if (strength < 60) return 3 // moderate
   if (strength < 80) return 4 // strong
   return 5 // very strong
+}
+
+// Modifica queste varianti di animazione per l'icona del tema
+const themeIconVariants = {
+  initial: { 
+    opacity: 0,
+    scale: 0.8,
+    y: 10
+  },
+  animate: { 
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 20
+    }
+  },
+  exit: { 
+    opacity: 0,
+    scale: 0.8,
+    y: -10,
+    transition: {
+      duration: 0.2,
+      ease: "easeOut"
+    }
+  }
 }
 
 function App() {
@@ -583,10 +612,10 @@ function App() {
   const [hoveredPasswordIndex, setHoveredPasswordIndex] = useState<number | null>(null);
 
   // Aggiungi questa funzione per gestire la visibilità delle singole password nella cronologia
-  const toggleHistoryPasswordVisibility = (index: number) => {
+  const toggleHistoryPasswordVisibility = (password: string) => {
     setHistoryPasswordsVisibility(prev => ({
       ...prev,
-      [index]: !prev[index]
+      [password]: !prev[password]
     }));
   };
 
@@ -628,12 +657,11 @@ function App() {
         newPassword += chars.charAt(Math.floor(Math.random() * chars.length))
       }
 
-      // Imposta direttamente la password senza effetti
       setPassword(newPassword)
       setPasswordHistory([newPassword])
-      setHistoryPasswordsVisibility({ 0: true })
+      // Inizializza la visibilità usando la password come chiave
+      setHistoryPasswordsVisibility({ [newPassword]: true })
       
-      // Imposta isInitialLoad a false dopo un ritardo
       setTimeout(() => {
         setIsInitialLoad(false)
       }, 1500)
@@ -666,7 +694,16 @@ function App() {
           clearInterval(interval)
           setIsGenerating(false)
           setPassword(newPassword)
-          setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
+          setPasswordHistory(prev => {
+            const newHistory = [newPassword, ...prev].slice(0, 5)
+            
+            setHistoryPasswordsVisibility(prevVisibility => ({
+              ...prevVisibility,
+              [newPassword]: true, // Usa la password come chiave
+            }))
+            
+            return newHistory
+          })
           toast.success(t.passwordGenerated)
         }
       }, 50)
@@ -692,7 +729,7 @@ function App() {
     }
   }, [password, isGenerating, t.passwordCopied])
 
-  // Assicurati che generatePassword non reimposti isInitialLoad
+  // Modifica la funzione generatePassword
   const generatePassword = useCallback(() => {
     if (useCustomPattern) {
       if (!isValidPattern(customPattern)) {
@@ -735,7 +772,16 @@ function App() {
         clearInterval(interval)
         setIsGenerating(false)
         setPassword(newPassword)
-        setPasswordHistory(prev => [newPassword, ...prev].slice(0, 5))
+        setPasswordHistory(prev => {
+          const newHistory = [newPassword, ...prev].slice(0, 5)
+          
+          setHistoryPasswordsVisibility(prevVisibility => ({
+            ...prevVisibility,
+            [newPassword]: true, // Usa la password come chiave
+          }))
+          
+          return newHistory
+        })
         toast.success(t.passwordGenerated)
       }
     }, 50)
@@ -814,20 +860,25 @@ function App() {
     }
   }
 
+  // Modifica la funzione deletePassword
   const deletePassword = (index: number) => {
     setPasswordHistory(prev => {
       const newHistory = prev.filter((_, i) => i !== index)
-      // Aggiorna la visibilità ricalcolando gli indici
-      setHistoryPasswordsVisibility(prev => {
-        const newVisibility: PasswordVisibility = {}
-        newHistory.forEach((_, i) => {
-          // Prendi lo stato di visibilità dalla password successiva nell'array precedente
-          newVisibility[i] = prev[i + (i >= index ? 1 : 0)]
-        })
-        return newVisibility
-      })
       return newHistory
     })
+    
+    setHistoryPasswordsVisibility(prev => {
+      const newVisibility: PasswordVisibility = {}
+      for (let i = 0; i < 5; i++) {
+        if (i < index) {
+          newVisibility[i] = prev[i]
+        } else {
+          newVisibility[i] = prev[i + 1]
+        }
+      }
+      return newVisibility
+    })
+    
     toast.success(t.passwordDeleted)
   }
 
@@ -855,284 +906,270 @@ function App() {
           ease: "easeOut"
         }}
       >
-        {/* Nascondi i pulsanti su mobile e mostra il menu hamburger */}
-        <div className="hidden md:flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <motion.div {...hoverScale}>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 cursor-pointer"
-                >
-                  <Languages className="h-4 w-4" />
-                </Button>
-              </motion.div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setLanguage('en')} className="flex items-center gap-2 cursor-pointer">
-                <GB className="w-4 h-4" />
-                English
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('it')} className="flex items-center gap-2 cursor-pointer">
-                <IT className="w-4 h-4" />
-                Italiano
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('es')} className="flex items-center gap-2 cursor-pointer">
-                <ES className="w-4 h-4" />
-                Español
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('de')} className="flex items-center gap-2 cursor-pointer">
-                <DE className="w-4 h-4" />
-                Deutsch
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('fr')} className="flex items-center gap-2 cursor-pointer">
-                <FR className="w-4 h-4" />
-                Français
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Sostituisci i bottoni con il Dock */}
+        <div className="hidden md:block">
+          <Dock className="!mt-0">
+            <DockIcon>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Languages className="h-5 w-5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem 
+                    onClick={() => setLanguage('en')}
+                    className="cursor-pointer"
+                  >
+                    <GB className="w-4 h-4 mr-2" />
+                    English
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLanguage('it')}
+                    className="cursor-pointer"
+                  >
+                    <IT className="w-4 h-4 mr-2" />
+                    Italiano
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLanguage('es')}
+                    className="cursor-pointer"
+                  >
+                    <ES className="w-4 h-4 mr-2" />
+                    Español
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLanguage('de')}
+                    className="cursor-pointer"
+                  >
+                    <DE className="w-4 h-4 mr-2" />
+                    Deutsch
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLanguage('fr')}
+                    className="cursor-pointer"
+                  >
+                    <FR className="w-4 h-4 mr-2" />
+                    Français
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </DockIcon>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <motion.div {...hoverScale}>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 cursor-pointer"
-                >
-                  <Palette className="h-4 w-4" />
-                </Button>
-              </motion.div>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-3">
-              <div className="space-y-2">
-                <h3 className="font-medium text-sm text-foreground mb-2">Colore principale</h3>
-                <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
-              </div>
-            </PopoverContent>
-          </Popover>
+            <DockIcon>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Palette className="h-5 w-5 cursor-pointer" />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3">
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-sm text-foreground mb-2">{t.mainColor}</h3>
+                    <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </DockIcon>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <motion.div {...hoverScale}>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 cursor-pointer"
-                >
-                  <History className="h-4 w-4" />
-                </Button>
-              </motion.div>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-2">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium text-sm text-foreground">Cronologia Password</h3>
-                  {passwordHistory.length > 0 && (
-                    <motion.div {...hoverScale}>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>{t.clearHistoryConfirm}</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {t.clearHistoryDescription}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                            <AlertDialogAction onClick={clearHistory}>
-                              {t.clearHistory}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </motion.div>
-                  )}
-                </div>
-                {passwordHistory.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    Cronologia vuota.
-                  </p>
-                ) : (
-                  passwordHistory.map((pwd, index) => (
-                    <div 
-                      key={index}
-                      className="relative flex items-center bg-muted rounded-lg p-2 group min-h-[40px]"
-                      onMouseEnter={() => setHoveredPasswordIndex(index)}
-                      onMouseLeave={() => setHoveredPasswordIndex(null)}
-                    >
-                      <div className="flex-1 font-mono text-sm text-foreground truncate pr-24">
-                        {colorizePassword(pwd, historyPasswordsVisibility[index] ?? true)}
-                      </div>
-                      <div className="absolute right-2 flex items-center gap-1">
-                        <motion.button
-                          className="p-2 rounded-md hover:bg-muted-foreground/10"
-                          variants={copyButtonVariants}
-                          initial="initial"
-                          whileHover="hover"
-                          whileTap="tap"
-                          onClick={() => toggleHistoryPasswordVisibility(index)}
-                        >
-                          {(historyPasswordsVisibility[index] ?? true) ? (
-                            <motion.div
-                              key="eye"
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -5 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </motion.div>
-                          ) : (
-                            <motion.div
-                              key="eye-off"
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -5 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <EyeOff className="h-4 w-4" />
-                            </motion.div>
-                          )}
-                        </motion.button>
-                        <motion.button
-                          className="p-2 rounded-md hover:bg-muted-foreground/10"
-                          variants={copyButtonVariants}
-                          initial="initial"
-                          whileHover="hover"
-                          whileTap="tap"
-                          animate={copiedHistoryIndex === index ? "success" : "initial"}
-                          onClick={() => {
-                            navigator.clipboard.writeText(pwd)
-                            setCopiedHistoryIndex(index)
-                            toast.success(t.passwordCopied)
-                            setTimeout(() => setCopiedHistoryIndex(null), 1000)
-                          }}
-                        >
-                          <AnimatePresence mode="wait">
-                            {copiedHistoryIndex === index ? (
-                              <motion.div
-                                key="check"
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -5 }}
-                                transition={{ duration: 0.2 }}
+            <DockIcon>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <History className="h-5 w-5 cursor-pointer" />
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-medium text-sm text-foreground">Cronologia Password</h3>
+                      {passwordHistory.length > 0 && (
+                        <motion.div {...hoverScale}>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                               >
-                                <Check className="h-4 w-4" />
-                              </motion.div>
-                            ) : (
-                              <motion.div
-                                key="copy"
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -5 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <Copy className="h-4 w-4" />
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.button>
-                        <AnimatePresence>
-                          {hoveredPasswordIndex === index && (
-                            <motion.div
-                              initial={{ width: 0, opacity: 0 }}
-                              animate={{ 
-                                width: "32px",
-                                opacity: 1,
-                                transition: {
-                                  width: {
-                                    duration: 0.2,
-                                    ease: "easeOut"
-                                  },
-                                  opacity: {
-                                    duration: 0.1,
-                                    delay: 0.1
-                                  }
-                                }
-                              }}
-                              exit={{ 
-                                width: 0,
-                                opacity: 0,
-                                transition: {
-                                  width: {
-                                    duration: 0.2,
-                                    ease: "easeIn"
-                                  },
-                                  opacity: {
-                                    duration: 0.1
-                                  }
-                                }
-                              }}
-                            >
-                              <button
-                                onClick={() => deletePassword(index)}
-                                className="p-2 rounded-md hover:bg-muted-foreground/10"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t.clearHistoryConfirm}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t.clearHistoryDescription}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                <AlertDialogAction onClick={clearHistory}>
+                                  {t.clearHistory}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </motion.div>
+                      )}
                     </div>
-                  ))
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+                    {passwordHistory.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-2">
+                        Cronologia vuota.
+                      </p>
+                    ) : (
+                      passwordHistory.map((pwd, index) => (
+                        <div 
+                          key={index}
+                          className="relative flex items-center bg-muted rounded-lg p-2 group min-h-[40px]"
+                          onMouseEnter={() => setHoveredPasswordIndex(index)}
+                          onMouseLeave={() => setHoveredPasswordIndex(null)}
+                        >
+                          <div className="flex-1 font-mono text-sm text-foreground truncate pr-24">
+                            {colorizePassword(pwd, historyPasswordsVisibility[pwd] ?? true)}
+                          </div>
+                          <div className="absolute right-2 flex items-center gap-1">
+                            <motion.button
+                              className="p-2 rounded-md hover:bg-muted-foreground/10"
+                              variants={copyButtonVariants}
+                              initial="initial"
+                              whileHover="hover"
+                              whileTap="tap"
+                              onClick={() => toggleHistoryPasswordVisibility(pwd)}
+                            >
+                              {(historyPasswordsVisibility[pwd] ?? true) ? (
+                                <motion.div
+                                  key="eye"
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -5 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </motion.div>
+                              ) : (
+                                <motion.div
+                                  key="eye-off"
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -5 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  <EyeOff className="h-4 w-4" />
+                                </motion.div>
+                              )}
+                            </motion.button>
+                            <motion.button
+                              className="p-2 rounded-md hover:bg-muted-foreground/10"
+                              variants={copyButtonVariants}
+                              initial="initial"
+                              whileHover="hover"
+                              whileTap="tap"
+                              animate={copiedHistoryIndex === index ? "success" : "initial"}
+                              onClick={() => {
+                                navigator.clipboard.writeText(pwd)
+                                setCopiedHistoryIndex(index)
+                                toast.success(t.passwordCopied)
+                                setTimeout(() => setCopiedHistoryIndex(null), 1000)
+                              }}
+                            >
+                              <AnimatePresence mode="wait">
+                                {copiedHistoryIndex === index ? (
+                                  <motion.div
+                                    key="check"
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </motion.div>
+                                ) : (
+                                  <motion.div
+                                    key="copy"
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </motion.button>
+                            <AnimatePresence>
+                              {hoveredPasswordIndex === index && (
+                                <motion.div
+                                  initial={{ width: 0, opacity: 0 }}
+                                  animate={{ 
+                                    width: "32px",
+                                    opacity: 1,
+                                    transition: {
+                                      width: {
+                                        duration: 0.2,
+                                        ease: "easeOut"
+                                      },
+                                      opacity: {
+                                        duration: 0.1,
+                                        delay: 0.1
+                                      }
+                                    }
+                                  }}
+                                  exit={{ 
+                                    width: 0,
+                                    opacity: 0,
+                                    transition: {
+                                      width: {
+                                        duration: 0.2,
+                                        ease: "easeIn"
+                                      },
+                                      opacity: {
+                                        duration: 0.1
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <button
+                                    onClick={() => deletePassword(index)}
+                                    className="p-2 rounded-md hover:bg-muted-foreground/10"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </DockIcon>
 
-          <motion.div {...hoverScale}>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleTheme}
-              className="h-10 w-10 cursor-pointer"
-            >
+            <DockIcon onClick={toggleTheme}>
               <AnimatePresence mode="wait">
                 {theme === 'light' ? (
                   <motion.div
                     key="moon"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ 
-                      duration: 0.2,
-                      ease: "easeInOut"
-                    }}
+                    variants={themeIconVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
                   >
-                    <Moon className="h-4 w-4" />
+                    <Moon className="h-5 w-5" />
                   </motion.div>
                 ) : (
                   <motion.div
                     key="sun"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ 
-                      duration: 0.2,
-                      ease: "easeInOut"
-                    }}
+                    variants={themeIconVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
                   >
-                    <Sun className="h-4 w-4" />
+                    <Sun className="h-5 w-5" />
                   </motion.div>
                 )}
               </AnimatePresence>
-            </Button>
-          </motion.div>
+            </DockIcon>
+          </Dock>
         </div>
 
-        {/* Menu hamburger per mobile */}
+        {/* Mantieni il menu hamburger per mobile */}
         <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
@@ -1156,7 +1193,7 @@ function App() {
                 {/* Sezione Lingua */}
                 <motion.div className="border-b border-border">
                   <motion.button
-                    className="flex items-center justify-between w-full py-4"
+                    className="flex items-center justify-between w-full py-4 cursor-pointer"
                     onClick={() => setOpenSection(openSection === 'language' ? null : 'language')}
                   >
                     <div className="flex items-center gap-2">
@@ -1190,7 +1227,7 @@ function App() {
                             <Button
                               key={code}
                               variant={language === code ? "default" : "outline"}
-                              className="w-full justify-start gap-2 h-9"
+                              className="w-full justify-start gap-2 h-9 hover:cursor-pointer [&>*]:hover:cursor-pointer"
                               onClick={() => {
                                 setLanguage(code as typeof language)
                                 setOpenSection(null)
@@ -1242,7 +1279,29 @@ function App() {
                             }}
                           >
                             <span>{theme === 'light' ? t.darkMode : t.lightMode}</span>
-                            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                            <AnimatePresence mode="wait">
+                              {theme === 'light' ? (
+                                <motion.div
+                                  key="moon"
+                                  variants={themeIconVariants}
+                                  initial="initial"
+                                  animate="animate"
+                                  exit="exit"
+                                >
+                                  <Moon className="h-4 w-4" />
+                                </motion.div>
+                              ) : (
+                                <motion.div
+                                  key="sun"
+                                  variants={themeIconVariants}
+                                  initial="initial"
+                                  animate="animate"
+                                  exit="exit"
+                                >
+                                  <Sun className="h-4 w-4" />
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </Button>
                         </div>
                       </motion.div>
@@ -1331,7 +1390,7 @@ function App() {
                                   onMouseLeave={() => setHoveredPasswordIndex(null)}
                                 >
                                   <div className="flex-1 font-mono text-sm truncate pr-24">
-                                    {colorizePassword(pwd, historyPasswordsVisibility[index] ?? true)}
+                                    {colorizePassword(pwd, historyPasswordsVisibility[pwd] ?? true)}
                                   </div>
                                   <div className="absolute right-2 flex items-center gap-1">
                                     <motion.button
@@ -1340,9 +1399,9 @@ function App() {
                                       initial="initial"
                                       whileHover="hover"
                                       whileTap="tap"
-                                      onClick={() => toggleHistoryPasswordVisibility(index)}
+                                      onClick={() => toggleHistoryPasswordVisibility(pwd)}
                                     >
-                                      {(historyPasswordsVisibility[index] ?? true) ? (
+                                      {(historyPasswordsVisibility[pwd] ?? true) ? (
                                         <motion.div
                                           key="eye"
                                           initial={{ opacity: 0, y: 5 }}
