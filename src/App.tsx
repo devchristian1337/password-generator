@@ -1612,7 +1612,7 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <CardTitle className="text-center">{t.title}</CardTitle>
+                <CardTitle className="text-center font-miracode">{t.title}</CardTitle>
               </motion.div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -1633,7 +1633,7 @@ function App() {
                   }}
                 >
                   <div className="relative select-none cursor-default w-full">
-                    <div className="whitespace-nowrap overflow-x-auto scrollbar-hide text-foreground min-h-[28px] flex items-center justify-center max-w-full">
+                    <div className="font-miracode whitespace-nowrap overflow-x-auto scrollbar-hide text-foreground min-h-[28px] flex items-center justify-center max-w-full">
                       {isGenerating 
                         ? scrambledText 
                         : (password 
@@ -1917,17 +1917,19 @@ function App() {
           ease: "easeOut"
         }}
       >
-        <span>Made by devchristian1337</span>
-        <motion.a
-          href="https://github.com/devchristian1337"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-foreground hover:text-primary transition-colors"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Github className="h-4 w-4" />
-        </motion.a>
+        <div className="inline-flex items-baseline gap-2">
+          <span className="align-middle">Made by devchristian1337</span>
+          <motion.a
+            href="https://github.com/devchristian1337"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground hover:text-primary transition-colors align-middle"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Github className="h-4 w-4" />
+          </motion.a>
+        </div>
       </motion.div>
 
       <Toaster richColors position="bottom-right" />

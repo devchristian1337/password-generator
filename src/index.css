@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'Miracode';
+  src: url('./assets/fonts/Miracode.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;@layer base {
@@ -68,6 +75,7 @@
     /* Nascondi la scrollbar per IE, Edge e Firefox */
     -ms-overflow-style: none;  /* IE e Edge */
     scrollbar-width: none;  /* Firefox */
+    font-family: 'Miracode', system-ui, sans-serif;
   }
 } 
 

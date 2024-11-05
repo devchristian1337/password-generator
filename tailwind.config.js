@@ -81,7 +81,10 @@ export default {
 						transform: 'translateZ(0) rotate(360deg)'
 					}
 				}
-			}
+			},
+			fontFamily: {
+				miracode: ['Miracode', 'system-ui', 'sans-serif'],
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
