@@ -914,7 +914,12 @@ function App() {
                 <DropdownMenuTrigger asChild>
                   <Languages className="h-5 w-5" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="bottom" align="start" className="mt-4">
+                <DropdownMenuContent 
+                  side="bottom" 
+                  align="start" 
+                  className="mt-4 isolate pointer-events-auto"
+                  style={{ pointerEvents: 'auto' }}
+                >
                   {[
                     { code: 'en', label: 'English', icon: GB },
                     { code: 'it', label: 'Italiano', icon: IT },
@@ -955,7 +960,11 @@ function App() {
                 <PopoverTrigger asChild>
                   <Palette className="h-5 w-5 cursor-pointer" />
                 </PopoverTrigger>
-                <PopoverContent side="bottom" align="start" className="mt-4 w-auto p-3">
+                <PopoverContent 
+                  side="bottom" 
+                  align="start" 
+                  className="mt-4 w-auto p-3 isolate"
+                >
                   <div className="space-y-2">
                     <h3 className="font-medium text-sm text-foreground mb-2">{t.mainColor}</h3>
                     <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
@@ -969,7 +978,12 @@ function App() {
                 <PopoverTrigger asChild>
                   <History className="h-5 w-5 cursor-pointer" />
                 </PopoverTrigger>
-                <PopoverContent side="bottom" align="start" className="mt-4 w-80 p-2">
+                <PopoverContent 
+                  side="bottom" 
+                  align="start" 
+                  className="mt-4 w-80 p-2 pointer-events-auto"
+                  style={{ pointerEvents: 'auto' }}
+                >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-medium text-sm text-foreground">Cronologia Password</h3>

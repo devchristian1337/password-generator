@@ -35,24 +35,18 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
   ) => {
     const mouseX = useMotionValue(Infinity);
 
-    const renderChildren = () => {
-      return React.Children.map(children, (child) => {
-        if (React.isValidElement(child) && child.type === DockIcon) {
-          return React.cloneElement(child, {
-            ...child.props,
-            mouseX: mouseX,
-            magnification: magnification,
-            distance: distance,
-          });
-        }
-        return child;
-      });
-    };
-
     return (
       <motion.div
         ref={ref}
-        onMouseMove={(e) => mouseX.set(e.pageX)}
+        onMouseMove={(e) => {
+          const target = e.target as HTMLElement;
+          if (
+            target.closest('[role="dialog"]') || 
+            target.closest('[role="menu"]') ||
+            target.closest('.isolate')
+          ) return;
+          mouseX.set(e.pageX);
+        }}
         onMouseLeave={() => mouseX.set(Infinity)}
         {...props}
         className={cn(dockVariants({ className }), {
@@ -61,7 +55,17 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
           "items-end": direction === "bottom",
         })}
       >
-        {renderChildren()}
+        {React.Children.map(children, (child) => {
+          if (React.isValidElement(child) && child.type === DockIcon) {
+            return React.cloneElement(child, {
+              ...child.props,
+              mouseX: mouseX,
+              magnification: magnification,
+              distance: distance,
+            });
+          }
+          return child;
+        })}
       </motion.div>
     );
   },
