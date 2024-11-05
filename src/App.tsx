@@ -915,41 +915,37 @@ function App() {
                   <Languages className="h-5 w-5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem 
-                    onClick={() => setLanguage('en')}
-                    className="cursor-pointer"
-                  >
-                    <GB className="w-4 h-4 mr-2" />
-                    English
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setLanguage('it')}
-                    className="cursor-pointer"
-                  >
-                    <IT className="w-4 h-4 mr-2" />
-                    Italiano
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setLanguage('es')}
-                    className="cursor-pointer"
-                  >
-                    <ES className="w-4 h-4 mr-2" />
-                    Español
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setLanguage('de')}
-                    className="cursor-pointer"
-                  >
-                    <DE className="w-4 h-4 mr-2" />
-                    Deutsch
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setLanguage('fr')}
-                    className="cursor-pointer"
-                  >
-                    <FR className="w-4 h-4 mr-2" />
-                    Français
-                  </DropdownMenuItem>
+                  {[
+                    { code: 'en', label: 'English', icon: GB },
+                    { code: 'it', label: 'Italiano', icon: IT },
+                    { code: 'es', label: 'Español', icon: ES },
+                    { code: 'de', label: 'Deutsch', icon: DE },
+                    { code: 'fr', label: 'Français', icon: FR },
+                  ].map(({ code, label, icon: Icon }) => (
+                    <DropdownMenuItem 
+                      key={code}
+                      onClick={() => setLanguage(code as typeof language)}
+                      className="cursor-pointer flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon className="w-4 h-4" />
+                        <span>{label}</span>
+                      </div>
+                      {language === code && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 20
+                          }}
+                        >
+                          <Check className="w-4 h-4" />
+                        </motion.div>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </DockIcon>
@@ -1227,14 +1223,29 @@ function App() {
                             <Button
                               key={code}
                               variant={language === code ? "default" : "outline"}
-                              className="w-full justify-start gap-2 h-9 hover:cursor-pointer [&>*]:hover:cursor-pointer"
+                              className="w-full justify-between gap-2 h-9 hover:cursor-pointer [&>*]:hover:cursor-pointer"
                               onClick={() => {
                                 setLanguage(code as typeof language)
                                 setOpenSection(null)
                               }}
                             >
-                              <Icon className="w-4 h-4" />
-                              <span>{label}</span>
+                              <div className="flex items-center gap-2">
+                                <Icon className="w-4 h-4" />
+                                <span>{label}</span>
+                              </div>
+                              {language === code && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 300,
+                                    damping: 20
+                                  }}
+                                >
+                                  <Check className="w-4 h-4" />
+                                </motion.div>
+                              )}
                             </Button>
                           ))}
                         </div>
