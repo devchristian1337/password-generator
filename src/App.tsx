@@ -1774,15 +1774,15 @@ function App() {
                   className="space-y-3"
                   variants={optionsContainerVariants}
                 >
-                  {/* Special Characters */}
+                  {/* Uppercase */}
                   <motion.div 
                     className={`flex items-center justify-between ${useCustomPattern ? "cursor-default" : ""}`}
                     variants={optionItemVariants}
                   >
-                    <Label className={useCustomPattern ? "cursor-default" : "cursor-pointer"}>{t.specialChars}</Label>
+                    <Label className={useCustomPattern ? "cursor-default" : "cursor-pointer"}>{t.uppercase}</Label>
                     <Switch
-                      checked={useSpecialChars}
-                      onCheckedChange={setUseSpecialChars}
+                      checked={useUppercase}
+                      onCheckedChange={setUseUppercase}
                       disabled={useCustomPattern}
                       className={useCustomPattern ? "!cursor-default" : "!cursor-pointer"}
                     />
@@ -1802,15 +1802,15 @@ function App() {
                     />
                   </motion.div>
 
-                  {/* Uppercase */}
+                  {/* Special Characters */}
                   <motion.div 
                     className={`flex items-center justify-between ${useCustomPattern ? "cursor-default" : ""}`}
                     variants={optionItemVariants}
                   >
-                    <Label className={useCustomPattern ? "cursor-default" : "cursor-pointer"}>{t.uppercase}</Label>
+                    <Label className={useCustomPattern ? "cursor-default" : "cursor-pointer"}>{t.specialChars}</Label>
                     <Switch
-                      checked={useUppercase}
-                      onCheckedChange={setUseUppercase}
+                      checked={useSpecialChars}
+                      onCheckedChange={setUseSpecialChars}
                       disabled={useCustomPattern}
                       className={useCustomPattern ? "!cursor-default" : "!cursor-pointer"}
                     />
