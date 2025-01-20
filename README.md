@@ -2,7 +2,7 @@
 
 Un moderno e sicuro generatore di password costruito con React, TypeScript e Framer Motion. Presenta un'interfaccia pulita con supporto per la modalità scura, opzioni multilingua e temi personalizzabili.
 
-![alt text](image.png)
+![alt text](https://iili.io/2iTT6qG.png)
 
 ## Caratteristiche
 
