@@ -1,6 +1,5 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -10,7 +9,7 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
-export interface DockProps extends VariantProps<typeof dockVariants> {
+interface DockProps extends VariantProps<typeof dockVariants> {
   className?: string;
   magnification?: number;
   distance?: number;
@@ -22,7 +21,7 @@ const DEFAULT_MAGNIFICATION = 44;
 const DEFAULT_DISTANCE = 120;
 
 const dockVariants = cva(
-  "supports-backdrop-blur:bg-white/10 supports-backdrop-blur:dark:bg-black/10 mx-auto mt-8 flex h-[48px] w-max gap-2 rounded-2xl border p-2 backdrop-blur-md",
+  "supports-backdrop-blur:bg-white/10 supports-backdrop-blur:dark:bg-black/10 mx-auto mt-8 flex h-[48px] w-max gap-2 rounded-2xl border p-2 backdrop-blur-md"
 );
 
 const Dock = React.forwardRef<HTMLDivElement, DockProps>(
@@ -35,7 +34,7 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
       direction = "bottom",
       ...props
     },
-    ref,
+    ref
   ) => {
     const mouseX = useMotionValue(Infinity);
 
@@ -45,10 +44,11 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
         onMouseMove={(e) => {
           const target = e.target as HTMLElement;
           if (
-            target.closest('[role="dialog"]') || 
+            target.closest('[role="dialog"]') ||
             target.closest('[role="menu"]') ||
-            target.closest('.isolate')
-          ) return;
+            target.closest(".isolate")
+          )
+            return;
           mouseX.set(e.pageX);
         }}
         onMouseLeave={() => mouseX.set(Infinity)}
@@ -60,7 +60,12 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
         })}
       >
         {React.Children.map(children, (child) => {
-          if (React.isValidElement(child) && child.type === DockIcon) {
+          if (
+            React.isValidElement<React.ComponentProps<typeof DockIcon>>(
+              child
+            ) &&
+            child.type === DockIcon
+          ) {
             return React.cloneElement(child, {
               ...child.props,
               mouseX: mouseX,
@@ -72,12 +77,12 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
         })}
       </motion.div>
     );
-  },
+  }
 );
 
 Dock.displayName = "Dock";
 
-export interface DockIconProps {
+interface DockIconProps {
   size?: number;
   magnification?: number;
   distance?: number;
@@ -109,7 +114,7 @@ const DockIcon = ({
   let widthSync = useTransform(
     distanceCalc,
     [-distance, 0, distance],
-    [28, magnification, 28],
+    [28, magnification, 28]
   );
 
   let width = useSpring(widthSync, {
@@ -124,7 +129,7 @@ const DockIcon = ({
       style={{ width }}
       className={cn(
         "flex aspect-square cursor-pointer items-center justify-center rounded-full hover:bg-muted transition-colors duration-200",
-        className,
+        className
       )}
       onClick={onClick}
       {...props}
@@ -137,4 +142,4 @@ const DockIcon = ({
 DockIcon.displayName = "DockIcon";
 
 export default Dock;
-export { DockIcon, dockVariants };
+export { DockIcon };
