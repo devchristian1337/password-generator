@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
@@ -456,7 +456,7 @@ const copyButtonVariants = {
 }
 
 // Modifica il componente AnimatedCharacter per un'animazione più futuristica
-const AnimatedCharacter = ({ char, isVisible }: { char: string | JSX.Element, isVisible: boolean }) => {
+const AnimatedCharacter = ({ char, isVisible }: { char: string | React.ReactElement, isVisible: boolean }) => {
   return (
     <motion.span
       initial={{ opacity: 0, y: 5 }}
@@ -590,7 +590,7 @@ function App() {
 
   const isFirstLoad = useRef(true)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [scrambledText, setScrambledText] = useState<(string | JSX.Element)[]>([])
+  const [scrambledText, setScrambledText] = useState<(string | React.ReactElement)[]>([])
 
   // Modifica la gestione di isInitialLoad
   const [isInitialLoad, setIsInitialLoad] = useState(true)
@@ -629,7 +629,7 @@ function App() {
     localStorage.setItem('primaryColor', primaryColor)
   }, [primaryColor])
 
-  const generateScrambledText = (finalPassword: string, currentIndex: number): (string | JSX.Element)[] => {
+  const generateScrambledText = (finalPassword: string, currentIndex: number): (string | React.ReactElement)[] => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
     let text = ''
     
